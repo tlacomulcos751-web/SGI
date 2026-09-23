@@ -1,0 +1,14 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /SGI/
+
+    # Proteger tus contraseñas
+    <FilesMatch "^\.env|composer\.json|package\.json|phpunit\.xml">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+
+    # Enviar todo el tráfico de forma segura a public
+    RewriteCond %{REQUEST_URI} !^/SGI/public/
+    RewriteRule ^(.*)$ public/$1 [L,QSA]
+</IfModule>
