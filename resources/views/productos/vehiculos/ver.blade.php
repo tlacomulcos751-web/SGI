@@ -27,6 +27,12 @@
                 <i class="fas fa-file-word text-primary me-2 fs-6"></i>
                 <span>Generar Vale de Salida</span>
             </a>
+            <a href="{{ route('vehiculos.generarMantenimiento', $vehiculo->id) }}" 
+               class="btn btn-light btn-sm rounded-pill px-3 text-dark fw-semibold shadow-sm d-flex align-items-center"
+               title="Descargar Orden de Mantenimiento en formato Word (.docx)">
+                <i class="fas fa-wrench text-warning me-2 fs-6"></i>
+                <span>Orden de Mantenimiento</span>
+            </a>
             @if(tienePermiso('vehiculo - modificar') && !$vehiculo->eliminado)
             <button type="button"
                 class="btn btn-primary"

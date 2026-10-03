@@ -188,7 +188,171 @@
         </div>
     </div>
 
-    <!-- 2. Apartado de Notificaciones / Alertas de Consumibles al 10% -->
+    <!-- 2.1 Apartado de Notificaciones: Alerta de Mantenimientos Preventivos (≤ 1 mes / Vencidos) -->
+    @if(esSuperAdmin() || tienePermiso('fijos - leer'))
+    <div id="seccion-mantenimientos-alertas" class="mb-4 animate__animated animate__fadeInUp" style="animation-delay: 0.15s;">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden" 
+             style="background: var(--card-bg, #fff); border-left: 5px solid {{ ($totalMantenimientosProximos ?? 0) > 0 ? '#f59e0b' : '#10b981' }} !important; box-shadow: 0 4px 20px rgba(245, 158, 11, 0.08) !important;">
+            <div class="card-body p-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle p-3 d-flex align-items-center justify-content-center" 
+                             style="width: 54px; height: 54px; font-size: 1.5rem; background-color: {{ ($totalMantenimientosProximos ?? 0) > 0 ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.12)' }}; color: {{ ($totalMantenimientosProximos ?? 0) > 0 ? '#d97706' : '#10b981' }};">
+                            <iconify-icon icon="lucide:wrench" width="26" height="26"></iconify-icon>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <h4 class="fw-bold mb-0 text-dark">
+                                    Alertas de Mantenimiento Preventivo (≤ 1 mes)
+                                </h4>
+                                @if(($totalMantenimientosProximos ?? 0) > 0)
+                                <span class="badge rounded-pill px-3 py-1 shadow-xs text-white" style="background-color: #f59e0b;">
+                                    <i class="fas fa-exclamation-circle me-1"></i> {{ $totalMantenimientosProximos }} {{ $totalMantenimientosProximos === 1 ? 'activo requiere' : 'activos requieren' }} servicio
+                                </span>
+                                @else
+                                <span class="badge bg-success rounded-pill px-3 py-1">
+                                    <i class="fas fa-check me-1"></i> Todos los activos al día
+                                </span>
+                                @endif
+                            </div>
+                            <p class="text-muted small mb-0 mt-1">
+                                Monitoreo inteligente de equipos y activos fijos con servicio preventivo programado a 30 días o menos de su vencimiento.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <button type="button" class="btn btn-sm btn-outline-warning rounded-pill px-3 shadow-xs text-dark" onclick="activarPushNotificaciones()">
+                            <i class="fas fa-bell me-1 text-warning"></i> Alertas Push
+                        </button>
+                        <a href="{{ route('productos.indexFijos') }}" class="btn btn-sm rounded-pill px-3 shadow-xs text-white" style="background-color: #f59e0b;">
+                            <i class="fas fa-desktop me-1"></i> Ver Activos Fijos
+                        </a>
+                    </div>
+                </div>
+
+                @if(($totalMantenimientosProximos ?? 0) > 0)
+                <!-- Indicadores Rápidos con Colores que Resaltan -->
+                <div class="row g-2 mb-3">
+                    <div class="col-md-4">
+                        <div class="p-2.5 rounded-3 bg-light d-flex align-items-center justify-content-between border" style="border-left: 4px solid #ef4444 !important;">
+                            <span class="text-muted small"><i class="fas fa-clock text-danger me-1"></i> Vencidos (Atención Inmediata):</span>
+                            <span class="badge bg-danger fw-bold fs-6">{{ $mantenimientosVencidos ?? 0 }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-2.5 rounded-3 bg-light d-flex align-items-center justify-content-between border" style="border-left: 4px solid #ea580c !important;">
+                            <span class="text-muted small"><i class="fas fa-hourglass-half text-warning me-1"></i> Urgentes (1 a 15 días):</span>
+                            <span class="badge text-white fw-bold fs-6" style="background-color: #ea580c;">{{ $mantenimientosUrgentes ?? 0 }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-2.5 rounded-3 bg-light d-flex align-items-center justify-content-between border" style="border-left: 4px solid #f59e0b !important;">
+                            <span class="text-muted small"><i class="fas fa-calendar-alt me-1" style="color: #f59e0b;"></i> Próximos (16 a 30 días):</span>
+                            <span class="badge text-white fw-bold fs-6" style="background-color: #f59e0b;">{{ $mantenimientosPorVenir ?? 0 }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grilla de Activos Próximos a Mantenimiento -->
+                <div class="row g-3">
+                    @foreach($mantenimientosProximos->take(6) as $itemMnt)
+                    @php
+                        $diasRest = (int)$itemMnt->dias_restantes;
+                        $fechaProxima = \Carbon\Carbon::parse($itemMnt->proxima_fecha);
+                    @endphp
+                    <div class="col-lg-4 col-md-6">
+                        <div class="border rounded-3 p-3 h-100 d-flex flex-column justify-content-between shadow-xs" 
+                             style="background: #fffdfa; border-left: 4px solid {{ $diasRest < 0 ? '#ef4444' : ($diasRest <= 15 ? '#ea580c' : '#f59e0b') }} !important;">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-start mb-1.5">
+                                    <h6 class="fw-bold mb-0 text-dark text-truncate me-2" title="{{ $itemMnt->producto_nombre }}">
+                                        <a href="{{ route('productos_fijos.viewFijos', $itemMnt->producto_fijo_id) }}" class="text-decoration-none text-dark hover-primary">
+                                            {{ $itemMnt->producto_nombre }}
+                                        </a>
+                                    </h6>
+                                    @if($diasRest < 0)
+                                        <span class="badge bg-danger rounded-pill flex-shrink-0" style="font-size: 0.72rem;">
+                                            Vencido ({{ abs($diasRest) }}d)
+                                        </span>
+                                    @elseif($diasRest == 0)
+                                        <span class="badge text-white rounded-pill flex-shrink-0" style="background-color: #ea580c; font-size: 0.72rem;">
+                                            ¡Vence Hoy!
+                                        </span>
+                                    @elseif($diasRest <= 15)
+                                        <span class="badge text-dark rounded-pill flex-shrink-0" style="background-color: #fde047; font-size: 0.72rem;">
+                                            En {{ $diasRest }} días
+                                        </span>
+                                    @else
+                                        <span class="badge text-white rounded-pill flex-shrink-0" style="background-color: #f59e0b; font-size: 0.72rem;">
+                                            En {{ $diasRest }} días
+                                        </span>
+                                    @endif
+                                </div>
+
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <span class="badge bg-light text-secondary border font-monospace" style="font-size: 0.72rem;">
+                                        {{ $itemMnt->clave }}
+                                    </span>
+                                    <span class="text-muted small" style="font-size: 0.75rem;">
+                                        <i class="far fa-calendar-alt text-warning me-1"></i>{{ $fechaProxima->format('d/m/Y') }}
+                                    </span>
+                                </div>
+
+                                <div class="small text-muted mb-1" style="font-size: 0.78rem;">
+                                    <i class="fas fa-map-marker-alt text-danger me-1"></i>
+                                    <span>{{ $itemMnt->ubicacion_nombre ?? 'Almacén General' }}</span>
+                                </div>
+
+                                @if(!empty($itemMnt->responsable_nombre))
+                                <div class="small text-muted mb-2" style="font-size: 0.78rem;">
+                                    <i class="fas fa-user-circle text-primary me-1"></i>
+                                    <span>{{ $itemMnt->responsable_nombre }}</span>
+                                </div>
+                                @endif
+
+                                @if(!empty($itemMnt->tipo_servicio))
+                                <div class="p-1.5 px-2 bg-white rounded border text-muted small mb-2" style="font-size: 0.72rem;">
+                                    <i class="fas fa-wrench me-1 text-warning"></i>
+                                    <span>{{ $itemMnt->tipo_servicio }} (cada {{ $itemMnt->frecuencia_meses ?? 6 }}m)</span>
+                                </div>
+                                @endif
+                            </div>
+
+                            <div class="pt-2 border-top d-flex justify-content-between align-items-center mt-2">
+                                <a href="{{ route('productos.fijos.generarMantenimiento', $itemMnt->producto_fijo_id) }}" 
+                                   class="btn btn-xs btn-outline-secondary d-inline-flex align-items-center gap-1" 
+                                   style="font-size: 0.75rem; padding: 2px 8px;" title="Descargar Orden de Mantenimiento en Word">
+                                    <iconify-icon icon="lucide:file-text" width="13" height="13" class="text-primary"></iconify-icon>
+                                    <span>Orden Word</span>
+                                </a>
+
+                                <a href="{{ route('productos_fijos.viewFijos', $itemMnt->producto_fijo_id) }}" 
+                                   class="btn btn-xs btn-primary d-inline-flex align-items-center gap-1 shadow-xs" 
+                                   style="font-size: 0.75rem; padding: 2px 10px; background-color: #0f172a; border-color: #0f172a;">
+                                    <span>Ver y registrar</span>
+                                    <i class="fas fa-chevron-right" style="font-size: 0.65rem;"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+                @else
+                <div class="text-center py-4 bg-light bg-opacity-50 rounded-3 border border-dashed">
+                    <iconify-icon icon="lucide:check-circle-2" width="36" height="36" class="text-success mb-2"></iconify-icon>
+                    <h6 class="fw-semibold text-slate-800 mb-1">Mantenimientos al día</h6>
+                    <p class="text-muted small mb-0" style="max-width: 480px; margin: 0 auto;">
+                        Ningún activo fijo está programado para mantenimiento en los próximos 30 días. El sistema te notificará automáticamente con 1 mes de anticipación.
+                    </p>
+                </div>
+                @endif
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- 2.2 Apartado de Notificaciones / Alertas de Consumibles al 10% -->
     @if(isset($consumiblesCriticos) && (esSuperAdmin() || tienePermiso('consumible - leer')))
     <div class="mb-4 animate__animated animate__fadeInUp" style="animation-delay: 0.2s;">
         <div class="card border-0 shadow-sm rounded-4 overflow-hidden {{ $totalConsumiblesCriticos > 0 ? 'border-start border-danger border-4' : 'border-start border-success border-4' }}" style="background: var(--card-bg, #fff);">
@@ -426,7 +590,13 @@
                                             <a href="{{ route('vehiculos.generarVale', $veh->id) }}" 
                                                class="btn btn-outline-primary btn-sm rounded-pill flex-grow-1 py-1"
                                                style="font-size: 0.75rem;">
-                                                <i class="fas fa-file-word me-1"></i> Vale de Salida
+                                                <i class="fas fa-file-word me-1"></i> Vale Salida
+                                            </a>
+                                            <a href="{{ route('vehiculos.generarMantenimiento', $veh->id) }}" 
+                                               class="btn btn-outline-warning btn-sm rounded-pill px-2 py-1"
+                                               style="font-size: 0.75rem;" 
+                                               title="Descargar Orden de Mantenimiento">
+                                                <i class="fas fa-wrench"></i>
                                             </a>
                                             <a href="{{ route('vehiculos.ver', $veh->id) }}" 
                                                class="btn btn-light border btn-sm rounded-pill px-3 py-1"
@@ -456,37 +626,132 @@
                             <div class="col-lg-6 col-xl-4">
                                 <div class="card border rounded-3 h-100 shadow-xs overflow-hidden" style="background: #fafafa;">
                                     <div class="p-3 bg-white border-bottom d-flex justify-content-between align-items-center">
-                                        <h6 class="fw-bold mb-0 text-dark text-truncate me-2" title="{{ $fijo->producto?->nombre }}">
-                                            <i class="fas fa-archive text-secondary me-1"></i> {{ $fijo->producto?->nombre ?? 'Activo Fijo' }}
+                                        <h6 class="fw-bold mb-0 text-dark text-truncate me-2 d-inline-flex align-items-center gap-1" title="{{ $fijo->producto?->nombre }}">
+                                            <iconify-icon icon="lucide:monitor" width="16" height="16" class="text-primary flex-shrink-0"></iconify-icon>
+                                            <span class="text-truncate">{{ $fijo->producto?->nombre ?? 'Activo Fijo' }}</span>
                                         </h6>
                                         <span class="badge bg-secondary rounded-pill px-2 py-1 font-monospace" style="font-size: 0.7rem;">
                                             {{ $fijo->clave }}
                                         </span>
                                     </div>
                                     <div class="p-3 d-flex flex-column justify-content-between flex-grow-1">
-                                        <div class="small text-muted mb-2">
-                                            <div class="d-flex align-items-center mb-1">
-                                                <i class="fas fa-map-marker-alt text-danger me-1"></i>
-                                                <span class="text-truncate"><strong>Ubicación:</strong> {{ $fijo->producto?->ubicacion?->nombre ?? 'Sin asignar' }}</span>
+                                        <div>
+                                            <div class="small text-muted mb-2">
+                                                <div class="d-flex align-items-center mb-1">
+                                                    <iconify-icon icon="lucide:map-pin" width="14" height="14" class="text-danger me-1 flex-shrink-0"></iconify-icon>
+                                                    <span class="text-truncate"><strong>Ubicación:</strong> {{ $fijo->producto?->ubicacion?->nombre ?? 'Sin asignar' }}</span>
+                                                </div>
+                                                <div class="d-flex align-items-center mb-1">
+                                                    <iconify-icon icon="lucide:building-2" width="14" height="14" class="text-primary me-1 flex-shrink-0"></iconify-icon>
+                                                    <span class="text-truncate"><strong>Empresa:</strong> {{ $fijo->producto?->empresa?->nombre ?? 'Grupo Nodo' }}</span>
+                                                </div>
+                                                <div class="d-flex align-items-center justify-content-between mt-2">
+                                                    @if(strtolower($fijo->estado ?? '') === 'reparacion')
+                                                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger rounded-pill px-2 py-1 d-inline-flex align-items-center gap-1">
+                                                            <iconify-icon icon="lucide:alert-triangle" width="12" height="12"></iconify-icon>
+                                                            <span>En Reparación</span>
+                                                        </span>
+                                                    @elseif(strtolower($fijo->estado ?? '') === 'baja')
+                                                        <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-2 py-1">
+                                                            Estado: Baja
+                                                        </span>
+                                                    @else
+                                                        <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2 py-1 d-inline-flex align-items-center gap-1">
+                                                            <iconify-icon icon="lucide:check-circle-2" width="12" height="12"></iconify-icon>
+                                                            <span>Activo</span>
+                                                        </span>
+                                                    @endif
+
+                                                    <small class="text-muted" style="font-size: 0.75rem;">
+                                                        {{ $fijo->fechaEntrada ? 'Asignado: ' . \Carbon\Carbon::parse($fijo->fechaEntrada)->format('d/m/Y') : '' }}
+                                                    </small>
+                                                </div>
                                             </div>
-                                            <div class="d-flex align-items-center mb-1">
-                                                <i class="fas fa-building text-primary me-1"></i>
-                                                <span class="text-truncate"><strong>Empresa:</strong> {{ $fijo->producto?->empresa?->nombre ?? 'Grupo Nodo' }}</span>
-                                            </div>
-                                            <div class="d-flex align-items-center justify-content-between mt-2">
-                                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2 py-1">
-                                                    Estado: {{ ucfirst($fijo->estado ?? 'Activo') }}
-                                                </span>
-                                                <small class="text-muted" style="font-size: 0.75rem;">
-                                                    {{ $fijo->fechaEntrada ? 'Asignado: ' . \Carbon\Carbon::parse($fijo->fechaEntrada)->format('d/m/Y') : '' }}
-                                                </small>
-                                            </div>
+
+                                            <!-- Estado del Mantenimiento Preventivo -->
+                                            @php
+                                                $ultMant = $fijo->mantenimientos?->first();
+                                            @endphp
+                                            @if($ultMant)
+                                                @php
+                                                    $proximaF = $ultMant->proxima_fecha ? \Carbon\Carbon::parse($ultMant->proxima_fecha) : null;
+                                                    $sem = $ultMant->semaforo;
+                                                    $diasRest = $ultMant->dias_restantes;
+                                                @endphp
+                                                @if($sem === 'vencido')
+                                                    <div class="p-2 rounded bg-danger bg-opacity-10 border-start border-danger border-3 mb-2">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <strong class="text-danger small d-inline-flex align-items-center gap-1" style="font-size: 0.78rem;">
+                                                                <iconify-icon icon="lucide:alert-circle" width="14" height="14" class="text-danger"></iconify-icon>
+                                                                <span>Mant. Vencido</span>
+                                                            </strong>
+                                                            <span class="badge bg-danger text-white font-monospace" style="font-size: 0.7rem;">
+                                                                {{ $proximaF ? $proximaF->format('d/m/Y') : 'N/A' }}
+                                                            </span>
+                                                        </div>
+                                                        <small class="text-muted d-block mt-1" style="font-size: 0.73rem;">
+                                                            Último: {{ \Carbon\Carbon::parse($ultMant->fecha)->format('d/m/Y') }} (Cada {{ $ultMant->frecuencia_meses ?? 6 }}m)
+                                                        </small>
+                                                    </div>
+                                                @elseif($sem === 'urgente' || $sem === 'proximo')
+                                                    <div class="p-2 rounded bg-warning bg-opacity-10 border-start border-warning border-3 mb-2">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <strong class="text-dark small d-inline-flex align-items-center gap-1" style="font-size: 0.78rem;">
+                                                                <iconify-icon icon="lucide:clock" width="14" height="14" class="text-warning"></iconify-icon>
+                                                                <span>Próximo Servicio</span>
+                                                            </strong>
+                                                            <span class="badge bg-warning text-dark font-monospace" style="font-size: 0.7rem;">
+                                                                {{ $proximaF ? $proximaF->format('d/m/Y') : 'N/A' }}
+                                                            </span>
+                                                        </div>
+                                                        <small class="text-muted d-block mt-1" style="font-size: 0.73rem;">
+                                                            En {{ $diasRest }} días • {{ $ultMant->tipo_servicio }}
+                                                        </small>
+                                                    </div>
+                                                @else
+                                                    <div class="p-2 rounded bg-light border-start border-success border-3 mb-2">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <strong class="text-dark small d-inline-flex align-items-center gap-1" style="font-size: 0.78rem;">
+                                                                <iconify-icon icon="lucide:check-circle-2" width="14" height="14" class="text-success"></iconify-icon>
+                                                                <span>Al día</span>
+                                                            </strong>
+                                                            <span class="badge bg-success bg-opacity-10 text-success border border-success font-monospace" style="font-size: 0.7rem;">
+                                                                {{ \Carbon\Carbon::parse($ultMant->fecha)->format('d/m/Y') }}
+                                                            </span>
+                                                        </div>
+                                                        <small class="text-muted d-block mt-1" style="font-size: 0.73rem;">
+                                                            Siguiente: {{ $proximaF ? $proximaF->format('d/m/Y') : 'N/A' }} (Cada {{ $ultMant->frecuencia_meses ?? 6 }}m)
+                                                        </small>
+                                                    </div>
+                                                @endif
+                                            @else
+                                                <div class="p-2 rounded bg-light border-start border-secondary border-3 mb-2">
+                                                    <small class="text-muted d-inline-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                                                        <iconify-icon icon="lucide:wrench" width="14" height="14" class="text-secondary"></iconify-icon>
+                                                        <span>Sin mantenimientos preventivos registrados</span>
+                                                    </small>
+                                                </div>
+                                            @endif
                                         </div>
-                                        <div class="pt-2 border-top mt-2">
+
+                                        <div class="d-flex gap-2 pt-2 border-top mt-2">
                                             <a href="{{ route('productos.fijos.generarVale', $fijo->id) }}" 
-                                               class="btn btn-outline-primary btn-sm rounded-pill w-100 py-1"
+                                               class="btn btn-outline-primary btn-sm rounded-pill flex-grow-1 py-1 d-inline-flex align-items-center justify-content-center gap-1"
                                                style="font-size: 0.75rem;">
-                                                <i class="fas fa-file-word me-1"></i> Vale de Salida
+                                                <iconify-icon icon="lucide:file-down" width="14" height="14"></iconify-icon>
+                                                <span>Vale Salida</span>
+                                            </a>
+                                            <a href="{{ route('productos.fijos.generarMantenimiento', $fijo->id) }}" 
+                                               class="btn btn-outline-warning btn-sm rounded-pill px-2 py-1 d-inline-flex align-items-center justify-content-center"
+                                               style="font-size: 0.75rem;" 
+                                               title="Descargar Orden de Mantenimiento">
+                                                <iconify-icon icon="lucide:wrench" width="14" height="14"></iconify-icon>
+                                            </a>
+                                            <a href="{{ route('productos_fijos.viewFijos', $fijo->id) }}" 
+                                               class="btn btn-light border btn-sm rounded-pill px-3 py-1 d-inline-flex align-items-center justify-content-center"
+                                               style="font-size: 0.75rem;" 
+                                               title="Ver detalles y mantenimientos">
+                                                <iconify-icon icon="lucide:eye" width="15" height="15" class="text-primary"></iconify-icon>
                                             </a>
                                         </div>
                                     </div>

@@ -129,6 +129,21 @@ class WebController extends Controller
             $consumiblesAgotados = $consumiblesCriticos->where('existencia', '<=', 0)->count();
             $consumiblesPorAgotar = $consumiblesCriticos->where('existencia', '>', 0)->count();
 
+            // Mantenimientos preventivos próximos (≤ 1 mes / 30 días o vencidos)
+            $mantenimientosProximos = function_exists('obtenerMantenimientosProximos') 
+                ? obtenerMantenimientosProximos(30, 18) 
+                : collect();
+            $totalMantenimientosProximos = function_exists('contarMantenimientosProximos') 
+                ? contarMantenimientosProximos(30) 
+                : 0;
+            $mantenimientosVencidos = $mantenimientosProximos->where('dias_restantes', '<', 0)->count();
+            $mantenimientosUrgentes = $mantenimientosProximos->filter(function($item) {
+                return $item->dias_restantes >= 0 && $item->dias_restantes <= 15;
+            })->count();
+            $mantenimientosPorVenir = $mantenimientosProximos->filter(function($item) {
+                return $item->dias_restantes > 15;
+            })->count();
+
             // Bienes y activos a cargo del usuario autenticado
             $userId = $usuario?->id;
             $misVehiculos = collect();
@@ -148,7 +163,13 @@ class WebController extends Controller
 
                 // Activos Fijos asignados al usuario
                 $misActivosFijos = ProductoFijo::where('responsable', $userId)
-                    ->with(['producto.ubicacion', 'producto.empresa'])
+                    ->with([
+                        'producto.ubicacion',
+                        'producto.empresa',
+                        'mantenimientos' => function ($q) {
+                            $q->orderBy('fecha', 'desc');
+                        }
+                    ])
                     ->get();
             }
 
@@ -162,6 +183,11 @@ class WebController extends Controller
                 'totalConsumiblesCriticos',
                 'consumiblesAgotados',
                 'consumiblesPorAgotar',
+                'mantenimientosProximos',
+                'totalMantenimientosProximos',
+                'mantenimientosVencidos',
+                'mantenimientosUrgentes',
+                'mantenimientosPorVenir',
                 'misVehiculos',
                 'misActivosFijos',
                 'totalCosasACargo'

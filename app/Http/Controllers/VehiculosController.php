@@ -255,6 +255,105 @@ class VehiculosController extends Controller
         }
     }
 
+    /**
+     * Generar Orden / Reporte de Mantenimiento para un Vehículo (Plantilla Oficial NAO).
+     */
+    public function generarDocumentoMantenimiento(Request $request, $id, $mantenimientoId = null)
+    {
+        $userId = Session::get('usuario')?->id;
+        $esResponsable = $userId ? Vehiculo::where('id', $id)->where('responsable', $userId)->exists() : false;
+
+        if (!tienePermiso('vehiculo - leer') && !esSuperAdmin() && !$esResponsable) {
+            return appRedirectToHome('No cuenta con los permisos necesarios');
+        }
+
+        try {
+            $vehiculo = Vehiculo::with(['ubicacion', 'usuarioResponsable.rol', 'mantenimientos'])->findOrFail($id);
+            $responsable = $vehiculo->usuarioResponsable;
+            $ubicacion = $vehiculo->ubicacion;
+
+            // Obtener el mantenimiento específico o el más reciente
+            $mantenimiento = null;
+            if ($mantenimientoId) {
+                $mantenimiento = \App\Models\MantenimientoVehiculo::where('vehiculo_id', $vehiculo->id)
+                    ->findOrFail($mantenimientoId);
+            } else {
+                $mantenimiento = $vehiculo->mantenimientos()->orderBy('fecha', 'desc')->first();
+            }
+
+            $templatePath = base_path('word/Plantilla_Profesional_Mantenimiento_NAO.docx');
+
+            if (!file_exists($templatePath)) {
+                Log::error('No se encontró la plantilla de mantenimiento en: ' . $templatePath);
+                return back()->with('error', 'No se encontró la plantilla de mantenimiento. Contacte al administrador.');
+            }
+
+            $templateProcessor = new \PhpOffice\PhpWord\TemplateProcessor($templatePath);
+
+            $getText = function ($value, $default = 'N/A') {
+                if (is_string($value)) {
+                    $trimmed = trim($value);
+                    return $trimmed !== '' ? $trimmed : $default;
+                }
+                return $value !== null ? $value : $default;
+            };
+
+            $fechaServicio = $mantenimiento && $mantenimiento->fecha 
+                ? \Carbon\Carbon::parse($mantenimiento->fecha)->format('d/m/Y') 
+                : now()->format('d/m/Y');
+
+            $marcaModelo = trim($getText($vehiculo->marca, '') . ' / ' . $getText($vehiculo->modelo, '') . ' (' . $getText($vehiculo->año, '') . ')');
+
+            $folio = 'MNT-VEH-' . str_pad($mantenimiento ? $mantenimiento->id : $vehiculo->id, 4, '0', STR_PAD_LEFT) . '-' . now()->format('Y');
+
+            $usuarioActual = Session::get('usuario');
+            $nombreAutorizo = $usuarioActual 
+                ? trim(($usuarioActual->nombre ?? '') . ' ' . ($usuarioActual->apellido ?? '')) 
+                : 'Administración Flotilla';
+
+            $kilometrajeTexto = $mantenimiento && $mantenimiento->kilometraje 
+                ? number_format($mantenimiento->kilometraje) . ' km' 
+                : 'N/A';
+
+            $templateProcessor->setValue('folio', $folio);
+            $templateProcessor->setValue('fecha', $fechaServicio);
+            $templateProcessor->setValue('hora', now()->format('H:i'));
+            $templateProcessor->setValue('tipo_servicio', $getText($mantenimiento ? $mantenimiento->tipo_servicio : 'Servicio Mecánico Preventivo'));
+            $templateProcessor->setValue('frecuencia', 'Por kilometraje / Semestral');
+            $templateProcessor->setValue('proxima_fecha', 'Según programa de kilometraje');
+            $templateProcessor->setValue('clave_producto', $getText($vehiculo->placas, 'Sin Placas'));
+            $templateProcessor->setValue('tipo_bien', 'Vehículo (' . $getText($vehiculo->tipo, 'Flotilla') . ')');
+            $templateProcessor->setValue('nombre_producto', $getText($vehiculo->tipo . ' ' . $vehiculo->marca . ' ' . $vehiculo->modelo . ' ' . $vehiculo->version));
+            $templateProcessor->setValue('marca_modelo', $marcaModelo);
+            $templateProcessor->setValue('serie_producto', $getText($vehiculo->niv, 'S/N'));
+            $templateProcessor->setValue('ubicacion_actual', $getText(optional($ubicacion)->nombre));
+            $templateProcessor->setValue('responsable_nombre', $getText($responsable ? $responsable->nombreCompleto() : 'Sin responsable'));
+            $templateProcessor->setValue('responsable_puesto', $getText($responsable && $responsable->rol ? $responsable->rol->nombre : 'Conductor Asignado'));
+            $templateProcessor->setValue('tecnico', $getText($mantenimiento ? $mantenimiento->taller : 'Taller Mecánico Especializado'));
+            $templateProcessor->setValue('costo', 'N/A');
+            $templateProcessor->setValue('kilometraje', $kilometrajeTexto);
+            $templateProcessor->setValue('condicion_activo', $vehiculo->eliminado ? 'Inactivo (Baja)' : 'Operativo / En circulación');
+            $templateProcessor->setValue('descripcion_servicio', $getText($mantenimiento ? $mantenimiento->descripcion : 'Servicio de mantenimiento vehicular, verificación de niveles y seguridad.'));
+            $templateProcessor->setValue('observaciones', 'Unidad vehicular inspeccionada y entregada lista para circulación operativa.');
+            $templateProcessor->setValue('autorizo_nombre', $getText($nombreAutorizo));
+
+            $fileName = 'Orden_Mantenimiento_Vehiculo_' . preg_replace('/[^A-Za-z0-9_\-]/', '_', str_replace(' ', '_', $getText($vehiculo->placas, 'Vehiculo_' . $vehiculo->id))) . '_' . now()->format('Ymd') . '.docx';
+            $tempDir = storage_path('app/temp');
+            $tempPath = $tempDir . DIRECTORY_SEPARATOR . $fileName;
+
+            if (!\Illuminate\Support\Facades\File::exists($tempDir)) {
+                \Illuminate\Support\Facades\File::makeDirectory($tempDir, 0755, true);
+            }
+
+            $templateProcessor->saveAs($tempPath);
+
+            return response()->download($tempPath)->deleteFileAfterSend(true);
+        } catch (\Exception $e) {
+            Log::error('Error al generar la orden de mantenimiento para el vehículo ID ' . $id . ': ' . $e->getMessage());
+            return back()->with('error', 'Ocurrió un error al generar la orden de mantenimiento de vehículo.');
+        }
+    }
+
     public function insertarDocumentacion(Request $request, $id)
     {
         if (!tienePermiso('vehiculo - modificar') || !Session::has('usuario')) {

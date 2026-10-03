@@ -8,11 +8,38 @@
     <title>@yield('title', 'Home')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <!-- Iconos FontAwesome y Bootstrap Icons CDN (Cargados después de Vite para máxima prioridad) -->
+    <!-- Iconos FontAwesome, Bootstrap Icons e Iconify CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
     
     <style>
+        /* Garantizar visibilidad y compatibilidad del Navbar de Bootstrap */
+        .navbar-collapse {
+            visibility: visible !important;
+        }
+        .navbar {
+            background-color: var(--bg-card, #ffffff);
+            border: 1px solid var(--border-color, #e2e8f0);
+            border-radius: 12px;
+            padding: 0.6rem 1rem;
+        }
+        [data-theme="dark"] .navbar {
+            background-color: var(--bg-card, #1e293b);
+            border-color: var(--border-color, #334155);
+        }
+        .nav-link-custom {
+            color: var(--text-main, #0f172a) !important;
+            font-weight: 500;
+            padding: 0.5rem 0.85rem !important;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .nav-link-custom:hover, .nav-link-custom:focus {
+            color: var(--primary, #3b5bdb) !important;
+            background-color: var(--bg-hover, rgba(59, 91, 219, 0.08));
+        }
+
         /* Garantizar compatibilidad absoluta de iconos FontAwesome y Bootstrap Icons */
         .fa, .fas, .far, .fa-solid, .fa-regular {
             font-family: "Font Awesome 6 Free", "Font Awesome 7 Free", "FontAwesome" !important;
@@ -24,6 +51,11 @@
         }
         .bi, [class^="bi-"], [class*=" bi-"] {
             font-family: "bootstrap-icons" !important;
+        }
+        iconify-icon {
+            display: inline-flex;
+            align-self: center;
+            vertical-align: -0.125em;
         }
 
         /* MAGIA PARA EL LOGO DEL NAVBAR */
@@ -93,7 +125,7 @@
 
     <div class="container-fluid px-3 px-xl-4" style="max-width: 1440px;">
         <!-- Navbar optimizada -->
-        <nav class="navbar navbar-expand-xl navbar-light mb-4 shadow-sm">
+        <nav class="navbar navbar-expand-lg mb-4 shadow-sm">
             <div class="container-fluid px-0">
                 <a class="navbar-brand brand me-3" href="{{ route('web.home') }}">
                     <img src="{{ asset('logos/nodo.jpeg') }}" alt="Logo Nodo" style="height: 42px; width: auto; border-radius: 8px;">
@@ -274,60 +306,145 @@
                         </li>
                     </ul>
 
-                    {{-- Notificaciones de Stock y Alertas Push --}}
+                    {{-- Notificaciones de Mantenimiento y Stock Crítico --}}
                     @php
-                        $alertasStockCriticoList = function_exists('obtenerConsumiblesCriticos') ? obtenerConsumiblesCriticos() : collect();
-                        $countStockCritico = function_exists('contarConsumiblesCriticos') ? contarConsumiblesCriticos() : 0;
+                        $puedeVerConsumibles = esSuperAdmin() || tienePermiso('consumible - leer');
+                        $puedeVerMantenimiento = esSuperAdmin() || tienePermiso('fijos - leer');
+                        
+                        $alertasStockCriticoList = ($puedeVerConsumibles && function_exists('obtenerConsumiblesCriticos')) ? obtenerConsumiblesCriticos() : collect();
+                        $countStockCritico = ($puedeVerConsumibles && function_exists('contarConsumiblesCriticos')) ? contarConsumiblesCriticos() : 0;
+
+                        $alertasMntList = ($puedeVerMantenimiento && function_exists('obtenerMantenimientosProximos')) ? obtenerMantenimientosProximos(30, 8) : collect();
+                        $countMnt = ($puedeVerMantenimiento && function_exists('contarMantenimientosProximos')) ? contarMantenimientosProximos(30) : 0;
+
+                        $totalAlertas = $countStockCritico + $countMnt;
                     @endphp
-                    @if(esSuperAdmin() || tienePermiso('consumible - leer'))
+                    @if($puedeVerConsumibles || $puedeVerMantenimiento)
                         <div class="nav-item dropdown me-3 list-unstyled">
-                            <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--text-main);" title="Alertas de Stock Crítico (≤ 10%)">
+                            <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--text-main);" title="Notificaciones del Sistema: Mantenimientos y Stock">
                                 <i class="fas fa-bell fs-5"></i>
-                                @if($countStockCritico > 0)
-                                    <span class="position-absolute top-10 start-90 translate-middle badge rounded-pill bg-danger shadow-sm animate__animated animate__pulse animate__infinite" style="font-size: 0.65em;">
-                                        {{ $countStockCritico }}
+                                @if($totalAlertas > 0)
+                                    <span class="position-absolute top-10 start-90 translate-middle badge rounded-pill shadow-sm animate__animated animate__pulse animate__infinite" 
+                                          style="font-size: 0.65em; background-color: {{ $countStockCritico > 0 ? '#dc3545' : '#f59e0b' }}; color: white;">
+                                        {{ $totalAlertas }}
                                         <span class="visually-hidden">alertas</span>
                                     </span>
                                 @endif
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end shadow-lg" style="width: 330px; max-height: 420px; overflow-y: auto;">
-                                <li class="px-3 py-2 bg-light border-bottom d-flex justify-content-between align-items-center">
-                                    <a href="{{ route('productos_consumibles.index', ['estado' => 'critico']) }}" class="fw-bold small text-danger text-decoration-none">
-                                        <i class="fas fa-exclamation-triangle me-1"></i> Stock Crítico (≤ 10%)
-                                    </a>
-                                    <a href="{{ route('productos_consumibles.index', ['estado' => 'critico']) }}" class="badge bg-danger rounded-pill text-decoration-none" title="Ver consumibles críticos">
-                                        {{ $countStockCritico }}
-                                    </a>
-                                </li>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-lg" style="width: 360px; max-height: 480px; overflow-y: auto;">
                                 <li class="p-2 border-bottom bg-white">
                                     <button type="button" class="btn btn-sm btn-outline-primary w-100 rounded-pill py-1 d-flex align-items-center justify-content-center gap-1 shadow-xs" onclick="activarPushNotificaciones()">
                                         <i class="fas fa-bell"></i> <span style="font-size: 0.75rem;">Habilitar Alertas Push</span>
                                     </button>
                                 </li>
-                                @forelse($alertasStockCriticoList as $alerta)
-                                    <li>
-                                        <a class="dropdown-item py-2 text-wrap hover-bg-light border-bottom" href="{{ route('productos_consumibles.index', ['nombre' => $alerta->nombre]) }}">
-                                            <div class="d-flex justify-content-between align-items-start">
-                                                <strong class="me-2 text-truncate" style="font-size: 0.85em; max-width: 190px;">{{ $alerta->nombre }}</strong>
-                                                <span class="badge {{ $alerta->existencia <= 0 ? 'bg-danger' : 'bg-warning text-dark' }} rounded-pill">
-                                                    {{ $alerta->existencia }} rest.
-                                                </span>
+
+                                {{-- SECCIÓN: Mantenimientos Preventivos Próximos (≤ 1 mes) - Remarcado en Ámbar/Naranja --}}
+                                @if($puedeVerMantenimiento)
+                                    <li class="px-3 py-2 border-bottom d-flex justify-content-between align-items-center" style="background-color: #fffbeb; border-left: 4px solid #f59e0b;">
+                                        <a href="{{ route('productos.indexFijos') }}" class="fw-bold small text-decoration-none d-flex align-items-center gap-1.5" style="color: #b45309;">
+                                            <iconify-icon icon="lucide:wrench" width="14" height="14" class="text-warning"></iconify-icon>
+                                            <span>Mantenimiento Próximo (≤ 1 mes)</span>
+                                        </a>
+                                        @if($countMnt > 0)
+                                            <span class="badge rounded-pill shadow-xs" style="background-color: #f59e0b; color: #fff; font-size: 0.7rem;">
+                                                {{ $countMnt }} {{ $countMnt === 1 ? 'activo' : 'activos' }}
+                                            </span>
+                                        @else
+                                            <span class="badge bg-light text-muted border" style="font-size: 0.68rem;">Al día</span>
+                                        @endif
+                                    </li>
+                                    @forelse($alertasMntList as $alertaMnt)
+                                        @php
+                                            $diasMnt = (int)$alertaMnt->dias_restantes;
+                                            $fechaMntCarbon = \Carbon\Carbon::parse($alertaMnt->proxima_fecha);
+                                        @endphp
+                                        <li>
+                                            <a class="dropdown-item py-2 text-wrap hover-bg-light border-bottom" href="{{ route('productos_fijos.viewFijos', $alertaMnt->producto_fijo_id) }}" style="border-left: 3px solid #f59e0b !important; background-color: #fffdfa;">
+                                                <div class="d-flex justify-content-between align-items-start mb-0.5">
+                                                    <strong class="me-2 text-truncate text-slate-800" style="font-size: 0.84em; max-width: 185px;" title="{{ $alertaMnt->producto_nombre }}">
+                                                        {{ $alertaMnt->producto_nombre }}
+                                                    </strong>
+                                                    @if($diasMnt < 0)
+                                                        <span class="badge bg-danger rounded-pill" style="font-size: 0.65rem;" title="Vencido el {{ $fechaMntCarbon->format('d/m/Y') }}">
+                                                            Vencido ({{ abs($diasMnt) }}d)
+                                                        </span>
+                                                    @elseif($diasMnt == 0)
+                                                        <span class="badge rounded-pill text-white" style="background-color: #ea580c; font-size: 0.65rem;">
+                                                            ¡Hoy!
+                                                        </span>
+                                                    @elseif($diasMnt <= 15)
+                                                        <span class="badge rounded-pill text-dark" style="background-color: #fde047; font-size: 0.65rem;" title="Programado: {{ $fechaMntCarbon->format('d/m/Y') }}">
+                                                            En {{ $diasMnt }} días
+                                                        </span>
+                                                    @else
+                                                        <span class="badge rounded-pill text-white" style="background-color: #f59e0b; font-size: 0.65rem;" title="Programado: {{ $fechaMntCarbon->format('d/m/Y') }}">
+                                                            En {{ $diasMnt }} días
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                                <div class="d-flex align-items-center justify-content-between text-muted" style="font-size: 0.72em;">
+                                                    <span class="font-monospace text-slate-600 font-semibold">{{ $alertaMnt->clave }}</span>
+                                                    <span><i class="far fa-calendar-alt me-0.5 text-warning"></i> {{ $fechaMntCarbon->format('d/m/Y') }}</span>
+                                                </div>
+                                                <small class="text-muted d-block text-truncate mt-0.5" style="font-size: 0.72em;">
+                                                    <i class="fas fa-map-marker-alt me-1 text-slate-400"></i>{{ $alertaMnt->ubicacion_nombre ?? 'Almacén General' }}
+                                                    @if(!empty($alertaMnt->responsable_nombre))
+                                                        <span class="mx-1">•</span><i class="fas fa-user me-0.5 text-slate-400"></i>{{ $alertaMnt->responsable_nombre }}
+                                                    @endif
+                                                </small>
+                                            </a>
+                                        </li>
+                                    @empty
+                                        <li>
+                                            <div class="dropdown-item text-muted text-center py-2" style="font-size: 0.78rem;">
+                                                <iconify-icon icon="lucide:check-circle" width="13" height="13" class="text-success me-1"></iconify-icon>
+                                                <span>Todos los activos al día este mes.</span>
                                             </div>
-                                            <small class="text-muted d-block" style="font-size: 0.75em;">
-                                                <i class="fas fa-map-marker-alt me-1 text-danger"></i>{{ $alerta->ubicacion_nombre ?? 'Almacén general' }}
-                                            </small>
+                                        </li>
+                                    @endforelse
+                                @endif
+
+                                {{-- SECCIÓN: Stock Crítico (≤ 10%) - Rojo --}}
+                                @if($puedeVerConsumibles)
+                                    <li class="px-3 py-2 bg-light border-bottom border-top d-flex justify-content-between align-items-center">
+                                        <a href="{{ route('productos_consumibles.index', ['estado' => 'critico']) }}" class="fw-bold small text-danger text-decoration-none d-flex align-items-center gap-1">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                            <span>Stock Crítico (≤ 10%)</span>
+                                        </a>
+                                        <a href="{{ route('productos_consumibles.index', ['estado' => 'critico']) }}" class="badge bg-danger rounded-pill text-decoration-none" title="Ver consumibles críticos">
+                                            {{ $countStockCritico }}
                                         </a>
                                     </li>
-                                @empty
-                                    <li><span class="dropdown-item text-muted text-center py-3"><i class="fas fa-check-circle text-success me-2"></i>Todo el stock es estable.</span></li>
-                                @endforelse
-                                <li class="p-2 bg-light d-flex justify-content-between align-items-center px-3">
-                                    <a href="{{ route('productos_consumibles.index', ['estado' => 'critico']) }}" class="small text-decoration-none fw-semibold text-danger">
-                                        <i class="fas fa-exclamation-triangle me-1"></i> Ver críticos
+                                    @forelse($alertasStockCriticoList as $alerta)
+                                        <li>
+                                            <a class="dropdown-item py-2 text-wrap hover-bg-light border-bottom" href="{{ route('productos_consumibles.index', ['nombre' => $alerta->nombre]) }}">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <strong class="me-2 text-truncate" style="font-size: 0.85em; max-width: 190px;">{{ $alerta->nombre }}</strong>
+                                                    <span class="badge {{ $alerta->existencia <= 0 ? 'bg-danger' : 'bg-warning text-dark' }} rounded-pill">
+                                                        {{ $alerta->existencia }} rest.
+                                                    </span>
+                                                </div>
+                                                <small class="text-muted d-block" style="font-size: 0.75em;">
+                                                    <i class="fas fa-map-marker-alt me-1 text-danger"></i>{{ $alerta->ubicacion_nombre ?? 'Almacén general' }}
+                                                </small>
+                                            </a>
+                                        </li>
+                                    @empty
+                                        <li><span class="dropdown-item text-muted text-center py-2" style="font-size: 0.78rem;"><i class="fas fa-check-circle text-success me-2"></i>Stock de consumibles estable.</span></li>
+                                    @endforelse
+                                @endif
+
+                                <li class="p-2 bg-light d-flex justify-content-between align-items-center px-3 border-top">
+                                    @if($puedeVerMantenimiento)
+                                    <a href="{{ route('productos.indexFijos') }}" class="small text-decoration-none fw-semibold" style="color: #b45309;">
+                                        <i class="fas fa-tools me-1"></i> Ver Activos
                                     </a>
+                                    @endif
+                                    @if($puedeVerConsumibles)
                                     <a href="{{ route('productos_consumibles.index') }}" class="small text-decoration-none fw-semibold text-primary">
-                                        Ver todos <i class="fas fa-arrow-right ms-1"></i>
+                                        Consumibles <i class="fas fa-arrow-right ms-1"></i>
                                     </a>
+                                    @endif
                                 </li>
                             </ul>
                         </div>
@@ -425,11 +542,24 @@
         }
 
         function enviarPushDemostracion() {
-            const count = {{ $countStockCritico ?? 0 }};
-            const title = count > 0 ? "⚠️ SGI: Alerta de Stock Crítico (≤ 10%)" : "✅ SGI: Notificaciones Activadas";
-            const body = count > 0 
-                ? `Atención: Tienes ${count} productos consumibles con stock en nivel crítico o agotados. Revisa el inventario.`
-                : "Las notificaciones automáticas de inventario están activas en este dispositivo.";
+            const countStock = {{ $countStockCritico ?? 0 }};
+            const countMnt = {{ $countMnt ?? 0 }};
+            let title = "✅ SGI: Notificaciones Activadas";
+            let body = "Las notificaciones automáticas de inventario y mantenimiento están activas en este dispositivo.";
+            let redirectUrl = "{{ route('web.home') }}";
+
+            if (countMnt > 0 && countStock > 0) {
+                title = "⚠️ SGI: Alertas de Mantenimiento y Stock";
+                body = `Atención: Tienes ${countMnt} activo(s) con mantenimiento próximo y ${countStock} consumible(s) en stock crítico.`;
+            } else if (countMnt > 0) {
+                title = "🛠️ SGI: Alerta de Mantenimiento Próximo (≤ 1 mes)";
+                body = `Atención: Tienes ${countMnt} activo(s) fijo(s) que requieren servicio de mantenimiento preventivo este mes.`;
+                redirectUrl = "{{ route('web.home') }}#seccion-mantenimientos-alertas";
+            } else if (countStock > 0) {
+                title = "⚠️ SGI: Alerta de Stock Crítico (≤ 10%)";
+                body = `Atención: Tienes ${countStock} productos consumibles con stock en nivel crítico o agotados.`;
+                redirectUrl = "{{ route('productos_consumibles.index', ['estado' => 'critico']) }}";
+            }
 
             try {
                 const notif = new Notification(title, {
@@ -438,7 +568,7 @@
                 });
                 notif.onclick = function() {
                     window.focus();
-                    window.location.href = "{{ route('productos_consumibles.index') }}";
+                    window.location.href = redirectUrl;
                 };
             } catch (e) {
                 console.log("Error creando notificación:", e);

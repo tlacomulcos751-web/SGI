@@ -98,6 +98,7 @@ Route::controller(VehiculosController::class)->prefix('vehiculos')->group(functi
     Route::post('/crear', 'insertar')->name('vehiculos.insertar');
     Route::get('/{id}/ver', 'ver')->name('vehiculos.ver');
     Route::get('/{id}/generar-vale', 'generarValeSalida')->name('vehiculos.generarVale');
+    Route::get('/{id}/generar-mantenimiento/{mantenimientoId?}', 'generarDocumentoMantenimiento')->name('vehiculos.generarMantenimiento');
     Route::put('/{id}', 'actualizar')->name('vehiculos.actualizar');
     Route::put('/{id}/eliminar', 'eliminar')->name('vehiculos.eliminar');
     Route::put('/{id}/reactivar', 'reactivar')->name('vehiculos.reactivar');
@@ -115,6 +116,7 @@ Route::controller(ProductoController::class)->group(function () {
     Route::get('/productos-fijos/{id}', 'viewFijos')->name('productos_fijos.viewFijos');
     Route::get('/productos-fijos/{id}/qr', 'verQr')->name('productos-fijos.qr');
     Route::get('/productos-fijos/{id}/generar-vale', 'generarValeSalida')->name('productos.fijos.generarVale');
+    Route::get('/productos-fijos/{id}/generar-mantenimiento/{mantenimientoId?}', 'generarDocumentoMantenimiento')->name('productos.fijos.generarMantenimiento');
 
     Route::post('/productos/eliminar-imagenes', 'eliminarImagenesProducto')->name('producto.eliminar.imagenes');
     Route::post('/producto-fijo/subir-imagenes', 'subirImagenesProducto')->name('productoFijo.subirImagenes');
@@ -122,6 +124,14 @@ Route::controller(ProductoController::class)->group(function () {
     Route::put('/productos-fijos/{id}/actualizar-info', 'actualizarInfo')->name('productos_fijos.actualizarInfo');
     Route::put('/productos-fijos/{id}/actualizar-ubicacion', 'actualizarUbicacion')->name('productos_fijos.actualizarUbicacion');
     Route::put('/productos-fijos/{id}/actualizar-responsable', 'actualizarResponsable')->name('productos_fijos.actualizarResponsable');
+
+    // Mantenimiento de Activos Fijos
+    Route::post('/productos-fijos/{id}/mantenimiento', 'insertarMantenimientoFijo')->name('productos_fijos.mantenimiento.insertar');
+    Route::delete('/productos-fijos/mantenimiento/{mantenimientoId}', 'eliminarMantenimientoFijo')->name('productos_fijos.mantenimiento.eliminar');
+
+    // Comentarios de Activos Fijos
+    Route::post('/productos-fijos/{id}/comentario', 'agregarComentarioFijo')->name('productos_fijos.comentario.agregar');
+    Route::delete('/productos-fijos/comentario/{comentarioId}', 'eliminarComentarioFijo')->name('productos_fijos.comentario.eliminar');
 });
 
 // Cartas Responsivas y Carta Poder

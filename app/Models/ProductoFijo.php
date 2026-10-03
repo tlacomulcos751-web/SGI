@@ -31,6 +31,21 @@ class ProductoFijo extends Model
         return $this->belongsTo(Usuario::class, 'responsable');
     }
 
+    public function mantenimientos()
+    {
+        return $this->hasMany(MantenimientoFijo::class, 'producto_fijo_id')->orderBy('fecha', 'desc');
+    }
+
+    public function ultimoMantenimiento()
+    {
+        return $this->hasOne(MantenimientoFijo::class, 'producto_fijo_id')->latestOfMany('fecha');
+    }
+
+    public function comentarios()
+    {
+        return $this->hasMany(ComentarioFijo::class, 'producto_fijo_id')->latest();
+    }
+
     // Método de consulta para inventario paginado (ajustado con alias correctos)
     public static function obtenerInventarioPaginado($cantidadPorPagina = 10)
     {

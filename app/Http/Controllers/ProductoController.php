@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ComentarioFijo;
 use App\Models\Empresa;
 use App\Models\Etiqueta;
 use App\Models\EtiquetaProducto;
@@ -555,7 +556,7 @@ public function indexFijos(Request $request)
 
         try {
             // Cargar el producto fijo con todas las relaciones necesarias de forma eficiente
-            $productoFijo = ProductoFijo::with(['producto.ubicacion', 'producto.empresa', 'usuarioResponsable.rol'])->findOrFail($id);
+            $productoFijo = ProductoFijo::with(['producto.ubicacion', 'producto.empresa', 'usuarioResponsable.rol', 'mantenimientos', 'comentarios.usuario'])->findOrFail($id);
             $producto = Producto::with('empresa')->findOrFail($productoFijo->producto_id);
             $etiquetas = EtiquetaProducto::where('producto_id', $productoFijo->producto_id)->get();
             $usuarios = Usuario::where('estado', 'activo')->orderBy('nombre')->get();
@@ -569,11 +570,13 @@ public function indexFijos(Request $request)
                 ->where('puede_leer_ubicacion', true)
                 ->get();
             $todasLasEtiquetas = Etiqueta::where('eliminado', 1)->orderBy('nombre')->get();
+            $comentarios = $productoFijo->comentarios;
             return view('productos.fijos.viewFijos', compact(
                 'productoFijo',
                 'producto',
                 'etiquetas',
                 'movimientos',
+                'comentarios',
                 'ubicaciones',
                 'usuarios',
                 'todasLasEtiquetas'
@@ -933,6 +936,243 @@ public function indexFijos(Request $request)
         } catch (\Exception $e) {
             Log::error('Error al generar el vale de salida para el producto fijo ID ' . $id . ': ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error al generar el documento. ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Generar Orden / Reporte de Mantenimiento para un Activo Fijo (Plantilla Oficial NAO).
+     */
+    public function generarDocumentoMantenimiento(Request $request, $id, $mantenimientoId = null)
+    {
+        $userId = Session::get('usuario')?->id;
+        $esResponsable = $userId ? ProductoFijo::where('id', $id)->where('responsable', $userId)->exists() : false;
+
+        if (!tienePermiso('fijos - leer') && !esSuperAdmin() && !$esResponsable) {
+            return appRedirectToHome('No cuenta con los permisos necesarios');
+        }
+
+        try {
+            $productoFijo = ProductoFijo::with(['producto.ubicacion', 'usuarioResponsable.rol', 'mantenimientos'])->findOrFail($id);
+            $responsable = $productoFijo->usuarioResponsable;
+            $producto = $productoFijo->producto;
+            $ubicacion = optional($producto)->ubicacion;
+
+            // Obtener el mantenimiento específico o el más reciente
+            $mantenimiento = null;
+            if ($mantenimientoId) {
+                $mantenimiento = \App\Models\MantenimientoFijo::where('producto_fijo_id', $productoFijo->id)
+                    ->findOrFail($mantenimientoId);
+            } else {
+                $mantenimiento = $productoFijo->mantenimientos->first();
+            }
+
+            $templatePath = base_path('word/Plantilla_Profesional_Mantenimiento_NAO.docx');
+
+            if (!file_exists($templatePath)) {
+                Log::error('No se encontró la plantilla de mantenimiento en: ' . $templatePath);
+                return back()->with('error', 'No se encontró la plantilla de mantenimiento. Contacte al administrador.');
+            }
+
+            $templateProcessor = new TemplateProcessor($templatePath);
+
+            $getText = function ($value, $default = 'N/A') {
+                if (is_string($value)) {
+                    $trimmed = trim($value);
+                    return $trimmed !== '' ? $trimmed : $default;
+                }
+                return $value !== null ? $value : $default;
+            };
+
+            $fechaServicio = $mantenimiento && $mantenimiento->fecha 
+                ? \Carbon\Carbon::parse($mantenimiento->fecha)->format('d/m/Y') 
+                : now()->format('d/m/Y');
+
+            $proximaFecha = $mantenimiento && $mantenimiento->proxima_fecha 
+                ? \Carbon\Carbon::parse($mantenimiento->proxima_fecha)->format('d/m/Y') 
+                : 'Pendiente';
+
+            $frecuencia = $mantenimiento && $mantenimiento->frecuencia_meses 
+                ? 'Cada ' . $mantenimiento->frecuencia_meses . ' meses' 
+                : 'Cada 6 meses';
+
+            $costoFormateado = ($mantenimiento && $mantenimiento->costo !== null && $mantenimiento->costo > 0)
+                ? '$' . number_format($mantenimiento->costo, 2) . ' MXN'
+                : 'N/A';
+
+            $marcaModelo = trim($getText(optional($producto)->marca, '') . ' ' . $getText(optional($producto)->modelo, ''));
+            if ($marcaModelo === '') {
+                $marcaModelo = 'N/A';
+            }
+
+            $folio = 'MNT-ACT-' . str_pad($mantenimiento ? $mantenimiento->id : $productoFijo->id, 4, '0', STR_PAD_LEFT) . '-' . now()->format('Y');
+
+            $usuarioActual = Session::get('usuario');
+            $nombreAutorizo = $usuarioActual 
+                ? trim(($usuarioActual->nombre ?? '') . ' ' . ($usuarioActual->apellido ?? '')) 
+                : 'Administración General';
+
+            $templateProcessor->setValue('folio', $folio);
+            $templateProcessor->setValue('fecha', $fechaServicio);
+            $templateProcessor->setValue('hora', now()->format('H:i'));
+            $templateProcessor->setValue('tipo_servicio', $getText($mantenimiento ? $mantenimiento->tipo_servicio : 'Mantenimiento Preventivo'));
+            $templateProcessor->setValue('frecuencia', $frecuencia);
+            $templateProcessor->setValue('proxima_fecha', $proximaFecha);
+            $templateProcessor->setValue('clave_producto', $getText($productoFijo->clave));
+            $templateProcessor->setValue('tipo_bien', 'Activo Fijo');
+            $templateProcessor->setValue('nombre_producto', $getText(optional($producto)->nombre, 'Activo Fijo'));
+            $templateProcessor->setValue('marca_modelo', $marcaModelo);
+            $templateProcessor->setValue('serie_producto', $getText(optional($producto)->codigoBarra, 'S/N'));
+            $templateProcessor->setValue('ubicacion_actual', $getText(optional($ubicacion)->nombre));
+            $templateProcessor->setValue('responsable_nombre', $getText($responsable ? $responsable->nombreCompleto() : 'Sin responsable'));
+            $templateProcessor->setValue('responsable_puesto', $getText($responsable && $responsable->rol ? $responsable->rol->nombre : 'Colaborador'));
+            $templateProcessor->setValue('tecnico', $getText($mantenimiento ? $mantenimiento->tecnico : 'Técnico Especialista'));
+            $templateProcessor->setValue('costo', $costoFormateado);
+            $templateProcessor->setValue('kilometraje', 'N/A');
+            $templateProcessor->setValue('condicion_activo', ucfirst($productoFijo->estado ?? 'Operativo') . ' / ' . ucfirst($productoFijo->calidad ?? 'Bueno'));
+            $templateProcessor->setValue('descripcion_servicio', $getText($mantenimiento ? $mantenimiento->descripcion : 'Mantenimiento preventivo general y diagnóstico de operatividad.'));
+            $templateProcessor->setValue('observaciones', $getText($mantenimiento ? $mantenimiento->comentarios : 'El equipo se encuentra en óptimas condiciones de funcionamiento.'));
+            $templateProcessor->setValue('autorizo_nombre', $getText($nombreAutorizo));
+
+            $fileName = 'Orden_Mantenimiento_' . preg_replace('/[^A-Za-z0-9_\-]/', '_', str_replace(' ', '_', $getText($productoFijo->clave, 'Activo_' . $productoFijo->id))) . '_' . now()->format('Ymd') . '.docx';
+            $tempDir = storage_path('app/temp');
+            $tempPath = $tempDir . DIRECTORY_SEPARATOR . $fileName;
+
+            if (!File::exists($tempDir)) {
+                File::makeDirectory($tempDir, 0755, true);
+            }
+
+            $templateProcessor->saveAs($tempPath);
+
+            return response()->download($tempPath)->deleteFileAfterSend(true);
+        } catch (\Exception $e) {
+            Log::error('Error al generar la orden de mantenimiento para el producto fijo ID ' . $id . ': ' . $e->getMessage());
+            return back()->with('error', 'Ocurrió un error al generar la orden de mantenimiento. ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Registrar mantenimiento para un activo fijo (equipo de cómputo, mobiliario, etc.)
+     */
+    public function insertarMantenimientoFijo(Request $request, $id)
+    {
+        if (!tienePermiso('fijos - modificar') || !Session::has('usuario')) {
+            return redirect()->back()->with('error', 'No cuenta con los permisos necesarios para registrar mantenimiento.');
+        }
+
+        $validated = $request->validate([
+            'fecha'            => 'required|date',
+            'tipo_servicio'    => 'required|string|max:150',
+            'frecuencia_meses' => 'nullable|integer|min:1|max:60',
+            'tecnico'          => 'nullable|string|max:255',
+            'costo'            => 'nullable|numeric|min:0',
+            'descripcion'      => 'required|string|max:2000',
+            'comentarios'      => 'nullable|string|max:1000',
+        ]);
+
+        try {
+            $productoFijo = ProductoFijo::with('producto')->findOrFail($id);
+
+            $frecuencia = !empty($validated['frecuencia_meses']) ? (int)$validated['frecuencia_meses'] : 6;
+            $fechaServicio = \Carbon\Carbon::parse($validated['fecha']);
+            $proximaFecha = $fechaServicio->copy()->addMonths($frecuencia);
+
+            $mantenimiento = new \App\Models\MantenimientoFijo();
+            $mantenimiento->producto_fijo_id = $productoFijo->id;
+            $mantenimiento->fecha = $validated['fecha'];
+            $mantenimiento->tipo_servicio = $validated['tipo_servicio'];
+            $mantenimiento->frecuencia_meses = $frecuencia;
+            $mantenimiento->proxima_fecha = $proximaFecha->toDateString();
+            $mantenimiento->tecnico = $validated['tecnico'] ?? null;
+            $mantenimiento->costo = ($request->filled('costo') && is_numeric($request->input('costo'))) ? $request->input('costo') : null;
+            $mantenimiento->descripcion = $validated['descripcion'];
+            $mantenimiento->save();
+
+            // Invalidar caché de notificaciones de mantenimiento
+            \Illuminate\Support\Facades\Cache::forget('mantenimientos_proximos_nav_30_10');
+            \Illuminate\Support\Facades\Cache::forget('mantenimientos_proximos_nav_30_8');
+            \Illuminate\Support\Facades\Cache::forget('mantenimientos_proximos_nav_30_18');
+            \Illuminate\Support\Facades\Cache::forget('count_mantenimientos_proximos_30');
+
+            return redirect()->back()->with('success', 'Mantenimiento preventivo registrado con éxito. Próximo servicio: ' . $proximaFecha->format('d/m/Y'));
+        } catch (\Exception $e) {
+            Log::error('Error al registrar mantenimiento de activo fijo: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error al guardar el mantenimiento: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Eliminar registro de mantenimiento
+     */
+    public function eliminarMantenimientoFijo($mantenimientoId)
+    {
+        if (!esSuperAdmin() && !tienePermiso('fijos - modificar')) {
+            return redirect()->back()->with('error', 'No cuenta con permisos para eliminar este registro.');
+        }
+
+        try {
+            $mantenimiento = \App\Models\MantenimientoFijo::findOrFail($mantenimientoId);
+            $productoFijoId = $mantenimiento->producto_fijo_id;
+            $mantenimiento->delete();
+
+            // Invalidar caché de notificaciones de mantenimiento
+            \Illuminate\Support\Facades\Cache::forget('mantenimientos_proximos_nav_30_10');
+            \Illuminate\Support\Facades\Cache::forget('mantenimientos_proximos_nav_30_8');
+            \Illuminate\Support\Facades\Cache::forget('mantenimientos_proximos_nav_30_18');
+            \Illuminate\Support\Facades\Cache::forget('count_mantenimientos_proximos_30');
+
+            return redirect()->back()->with('success', 'Registro de mantenimiento eliminado correctamente.');
+        } catch (\Exception $e) {
+            Log::error('Error al eliminar mantenimiento: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error al eliminar el registro de mantenimiento.');
+        }
+    }
+
+    /**
+     * Agregar comentario a un activo fijo.
+     */
+    public function agregarComentarioFijo(Request $request, $id)
+    {
+        if (!tienePermiso('fijos - modificar') || !Session::has('usuario')) {
+            return redirect()->back()->with('error', 'No cuenta con los permisos necesarios.');
+        }
+
+        $request->validate([
+            'comentario' => 'required|string|max:2000',
+        ]);
+
+        try {
+            $productoFijo = \App\Models\ProductoFijo::findOrFail($id);
+
+            ComentarioFijo::create([
+                'producto_fijo_id' => $productoFijo->id,
+                'usuario_id'       => session('usuario')->id,
+                'comentario'       => $request->input('comentario'),
+            ]);
+
+            return redirect()->back()->with('success', 'Comentario agregado correctamente.');
+        } catch (\Exception $e) {
+            Log::error('Error al agregar comentario: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error al guardar el comentario.');
+        }
+    }
+
+    /**
+     * Eliminar comentario de un activo fijo.
+     */
+    public function eliminarComentarioFijo($comentarioId)
+    {
+        if (!tienePermiso('fijos - modificar') || !Session::has('usuario')) {
+            return redirect()->back()->with('error', 'No cuenta con los permisos necesarios.');
+        }
+
+        try {
+            $comentario = ComentarioFijo::findOrFail($comentarioId);
+            $comentario->delete();
+
+            return redirect()->back()->with('success', 'Comentario eliminado correctamente.');
+        } catch (\Exception $e) {
+            Log::error('Error al eliminar comentario: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error al eliminar el comentario.');
         }
     }
 }

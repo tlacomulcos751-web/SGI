@@ -141,3 +141,64 @@ if (!function_exists('contarConsumiblesCriticos')) {
     }
 }
 
+if (!function_exists('obtenerMantenimientosProximos')) {
+    function obtenerMantenimientosProximos($diasLimite = 30, $limiteRegistros = 10)
+    {
+        $cacheKey = 'mantenimientos_proximos_nav_' . $diasLimite . '_' . $limiteRegistros;
+        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 60, function() use ($diasLimite, $limiteRegistros) {
+            $fechaLimite = \Carbon\Carbon::today()->addDays($diasLimite)->toDateString();
+
+            return \Illuminate\Support\Facades\DB::table('mantenimientos_fijos as mf')
+                ->join(\Illuminate\Support\Facades\DB::raw('(SELECT producto_fijo_id, MAX(id) as max_id FROM mantenimientos_fijos GROUP BY producto_fijo_id) as latest'), 'mf.id', '=', 'latest.max_id')
+                ->join('productos_fijos as pf', 'mf.producto_fijo_id', '=', 'pf.id')
+                ->join('productos as p', 'pf.producto_id', '=', 'p.id')
+                ->leftJoin('ubicacion as u', 'p.ubicacion_id', '=', 'u.id')
+                ->leftJoin('usuario as us', 'pf.responsable', '=', 'us.id')
+                ->select(
+                    'mf.id as mantenimiento_id',
+                    'mf.producto_fijo_id',
+                    'mf.fecha as ultima_fecha',
+                    'mf.proxima_fecha',
+                    'mf.tipo_servicio',
+                    'mf.frecuencia_meses',
+                    'pf.clave',
+                    'pf.estado as estado_fijo',
+                    'p.nombre as producto_nombre',
+                    'p.descripcion as producto_descripcion',
+                    'p.codigoBarra',
+                    'u.nombre as ubicacion_nombre',
+                    \Illuminate\Support\Facades\DB::raw("CONCAT_WS(' ', us.nombre, us.apellido) as responsable_nombre"),
+                    \Illuminate\Support\Facades\DB::raw("DATEDIFF(mf.proxima_fecha, CURDATE()) as dias_restantes")
+                )
+                ->where(function($q) {
+                    $q->whereNull('pf.estado')->orWhere('pf.estado', '!=', 'baja');
+                })
+                ->whereNotNull('mf.proxima_fecha')
+                ->where('mf.proxima_fecha', '<=', $fechaLimite)
+                ->orderBy('mf.proxima_fecha', 'asc')
+                ->limit($limiteRegistros)
+                ->get();
+        });
+    }
+}
+
+if (!function_exists('contarMantenimientosProximos')) {
+    function contarMantenimientosProximos($diasLimite = 30)
+    {
+        $cacheKey = 'count_mantenimientos_proximos_' . $diasLimite;
+        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 60, function() use ($diasLimite) {
+            $fechaLimite = \Carbon\Carbon::today()->addDays($diasLimite)->toDateString();
+
+            return \Illuminate\Support\Facades\DB::table('mantenimientos_fijos as mf')
+                ->join(\Illuminate\Support\Facades\DB::raw('(SELECT producto_fijo_id, MAX(id) as max_id FROM mantenimientos_fijos GROUP BY producto_fijo_id) as latest'), 'mf.id', '=', 'latest.max_id')
+                ->join('productos_fijos as pf', 'mf.producto_fijo_id', '=', 'pf.id')
+                ->where(function($q) {
+                    $q->whereNull('pf.estado')->orWhere('pf.estado', '!=', 'baja');
+                })
+                ->whereNotNull('mf.proxima_fecha')
+                ->where('mf.proxima_fecha', '<=', $fechaLimite)
+                ->count();
+        });
+    }
+}
+
