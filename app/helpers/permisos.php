@@ -29,11 +29,30 @@ function tienePermiso(string $nombrePermiso): bool
 
     $permisos = Session::get('usuario_permisos', []);
 
+    // Si la sesión no tiene permisos cargados, intentar cargarlos
+    if (empty($permisos) && Session::has('usuario')) {
+        $usuario = Session::get('usuario');
+        if ($usuario && isset($usuario->id_rol)) {
+            try {
+                $permisos = \Illuminate\Support\Facades\DB::select('
+                    SELECT vp.*
+                    FROM vista_permisos vp
+                    WHERE vp.rol = ?
+                ', [$usuario->id_rol]);
+                Session::put('usuario_permisos', $permisos);
+            } catch (\Throwable $e) {}
+        }
+    }
+
     foreach ($permisos as $permiso) {
+        $nombre = $permiso->permiso_nombre ?? '';
+        $otorgado = strtolower(trim((string)($permiso->permiso_otorgado ?? '')));
+        $activo = strtolower(trim((string)($permiso->permiso_activo ?? '')));
+
         if (
-            $permiso->permiso_nombre === $nombrePermiso &&
-            $permiso->permiso_otorgado === 'activo' &&
-            $permiso->permiso_activo === 'activo'
+            strcasecmp($nombre, $nombrePermiso) === 0 &&
+            ($otorgado === 'activo' || $otorgado === '1' || $otorgado === 'true') &&
+            ($activo === 'activo' || $activo === '1' || $activo === 'true')
         ) {
             return true;
         }

@@ -1,0 +1,137 @@
+    /* Estilos generales */
+    .company-header {
+        background: linear-gradient(135deg, rgb(196, 216, 246) 0%, rgb(169, 194, 235) 100%);
+        border-left: 4px solid #6c757d;
+    }
+
+    .company-title {
+        color: #495057;
+    }
+
+    .company-subtitle {
+        color: #6c757d;
+        opacity: 0.9;
+    }
+
+    /* Botones */
+    .btn-edit-company {
+        background-color: #6f42c1;
+        border-color: #6f42c1;
+        color: white;
+    }
+
+    .btn-edit-company:hover {
+        background-color: #5a32a3;
+        border-color: #5a32a3;
+        color: white;
+    }
+
+    .btn-add-location {
+        background-color: #20c997;
+        border-color: #20c997;
+        color: white;
+    }
+
+    .btn-add-location:hover {
+        background-color: #17a673;
+        border-color: #17a673;
+        color: white;
+    }
+
+    .btn-view-details {
+        background-color: #fd7e14;
+        border-color: #fd7e14;
+        color: white;
+    }
+
+    .btn-view-details:hover {
+        background-color: #e36209;
+        border-color: #e36209;
+        color: white;
+    }
+
+    .btn-add-product {
+        background-color: #20c997;
+        border-color: #20c997;
+        color: white;
+    }
+
+    .btn-add-product:hover {
+        background-color: #17a673;
+        border-color: #17a673;
+        color: white;
+    }
+
+    .btn-view-product {
+        background-color: #6f42c1;
+        border-color: #6f42c1;
+        color: white;
+    }
+
+    .btn-view-product:hover {
+        background-color: #5a32a3;
+        border-color: #5a32a3;
+        color: white;
+    }
+
+    /* Tarjetas */
+    .company-details-card {
+        border-left: 4px solid #6f42c1;
+    }
+
+    .company-details-card .card-header {
+        color: #6f42c1;
+        font-weight: 600;
+    }
+
+    .company-data {
+        color: #495057;
+        font-weight: 500;
+        font-size: 1.1rem;
+    }
+
+    .locations-card {
+        border-left: 4px solid #20c997;
+    }
+
+    .locations-card .card-header {
+        color: #20c997;
+        font-weight: 600;
+    }
+
+    .location-item {
+        transition: transform 0.2s;
+        border-left: 3px solid #fd7e14;
+    }
+
+    .location-item:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .products-card {
+        border-left: 4px solid #fd7e14;
+    }
+
+    .products-card .card-header {
+        color: #fd7e14;
+        font-weight: 600;
+    }
+
+    .scroll-container::-webkit-scrollbar {
+        width: 12px;
+        /* Ancho de la barra */
+    }
+
+    .scroll-container::-webkit-scrollbar-thumb {
+        background-color: #888;
+        /* Color del thumb */
+        border-radius: 6px;
+    }
+
+    .scroll-container::-webkit-scrollbar-track {
+        background-color: #f1f1f1;
+        /* Color del fondo */
+    }
+
+    

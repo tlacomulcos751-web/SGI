@@ -1,0 +1,318 @@
+:root {
+    --primary-color: #4361ee;
+    --secondary-color: #3a0ca3;
+    --accent-color: #f72585;
+    --glass-bg: rgba(255, 255, 255, 0.85);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyfloat {
+    0% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-5px);
+    }
+
+    100% {
+        transform: translateY(0px);
+    }
+}
+
+body {
+    background-color: var(--bg-body);
+    min-height: 100vh;
+    padding-top: 20px;
+    opacity: 0;
+    animation: fadeIn 0.6s ease-out forwards;
+}
+
+.nav-link-custom {
+    color: #2b2d42;
+    font-weight: 500;
+    padding: 0.5rem 1.2rem;
+    margin: 0 0.2rem;
+    border-radius: 8px;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.nav-link-custom::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 3px;
+    background: var(--primary-color);
+    transition: width 0.3s ease;
+    border-radius: 3px;
+}
+
+.nav-link-custom:hover {
+    transform: translateY(-3px);
+    color: var(--primary-color);
+}
+
+.nav-link-custom:hover::before {
+    width: 100%;
+}
+
+.nav-link-custom i {
+    margin-right: 8px;
+    transition: transform 0.3s ease;
+}
+
+.nav-link-custom:hover i {
+    transform: scale(1.1);
+}
+
+.btn-float {
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.btn-float:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.logout-btn {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+    border: none !important;
+    color: white !important;
+    font-weight: 600;
+    font-size: 0.82rem;
+    padding: 6px 16px !important;
+    border-radius: 50px !important;
+    white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.25) !important;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.logout-btn:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 10px rgba(239, 68, 68, 0.35) !important;
+}
+
+.brand {
+    background: linear-gradient(to right, #4361ee, #3a0ca3);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-weight: 700;
+    font-size: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.brand:hover {
+    transform: scale(1.02);
+    text-shadow: 0 5px 15px rgba(67, 97, 238, 0.2);
+}
+
+.main-content {
+    animation: fadeIn 0.8s ease-out 0.2s forwards;
+    opacity: 0;
+}
+
+.footer {
+    margin-top: 50px;
+    padding: 20px 0;
+    color: #6c757d;
+    text-align: center;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    background: var(--glass-bg);
+    backdrop-filter: blur(5px);
+    border-radius: 12px;
+}
+
+.pulse {
+    animation: float 3s ease-in-out infinite;
+}
+
+/* Estilos para el dropdown */
+#productosDropdownMenu,
+#empresasDropdownMenu {
+    margin-top: 5px;
+    border-radius: 10px;
+    min-width: 250px;
+    animation: fadeIn 0.2s ease-out;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-item {
+    transition: all 0.2s;
+    border-radius: 6px;
+    margin: 2px 8px;
+    align-items: center;
+}
+
+.dropdown-item:hover {
+    background-color: var(--bg-hover);
+    transform: translateX(3px);
+}
+
+.info-box {
+    background: var(--bg-secondary);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Asegurar que el dropdown esté por encima */
+.navbar {
+    position: relative;
+    z-index: 1050;
+}
+
+.dropdown-menu {
+    z-index: 1060 !important;
+}
+
+.text-gradient {
+    background: linear-gradient(45deg, #4361ee, #3a0ca3);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-weight: 700;
+}
+
+.hover-scale {
+    transition: all 0.2s ease;
+}
+
+.hover-scale:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(67, 97, 238, 0.03);
+}
+
+.pagination .page-item.active .page-link {
+    background: linear-gradient(45deg, #4361ee, #3a0ca3);
+    border-color: transparent;
+}
+
+.pagination .page-link {
+    color: #4361ee;
+    min-width: 38px;
+    text-align: center;
+    margin: 0 2px;
+    border-radius: 8px !important;
+    border: 1px solid rgba(67, 97, 238, 0.2);
+}
+
+.pagination .page-link:hover {
+    background-color: rgba(67, 97, 238, 0.1);
+}
+
+/* glass-nav removed */
+
+.btn-float {
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.btn-float:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* modal-backdrop override removed */
+
+.print-form {
+    display: inline-block;
+    margin: 10px 0;
+}
+
+.print-button {
+    background-color: #4a6baf;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.print-button:hover {
+    background-color: #3a5699;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.print-button:active {
+    transform: translateY(0);
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.modal-content {
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.form-select,
+.form-control {
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.form-select:focus,
+.form-control:focus {
+    box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+    border-color: #667eea;
+}
+
+.info-box {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 10px;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-outline-secondary {
+    border-radius: 10px;
+    border-width: 2px;
+}

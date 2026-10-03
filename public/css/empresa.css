@@ -1,0 +1,36 @@
+.text-gradient {
+background: linear-gradient(45deg, #4361ee, #3a0ca3);
+-webkit-background-clip: text;
+background-clip: text;
+color: transparent;
+font-weight: 700;
+}
+
+.hover-scale {
+transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-scale:hover {
+transform: translateY(-2px);
+background-color: rgba(67, 97, 238, 0.05) !important;
+}
+
+.table-hover tbody tr:hover {
+background-color: rgba(67, 97, 238, 0.05);
+}
+
+.pagination .page-item.active .page-link {
+background: linear-gradient(45deg, #4361ee, #3a0ca3);
+border-color: transparent;
+}
+
+.pagination .page-link {
+color: #4361ee;
+border-radius: 8px !important;
+margin: 0 3px;
+border: 1px solid rgba(67, 97, 238, 0.2);
+}
+
+.pagination .page-link:hover {
+background-color: rgba(67, 97, 238, 0.1);
+}

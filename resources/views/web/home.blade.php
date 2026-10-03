@@ -20,8 +20,7 @@
         </div>
     </div>
 
-    @if(esSuperAdmin() || tienePermiso('leerUsuarios'))
-    <!-- Bento Grid Estadísticas (Super Admin y Administrador) -->
+    <!-- Bento Grid Estadísticas -->
     <div class="bento-grid">
         <!-- Registros -->
         <div class="bento-card primary animate__animated animate__fadeInUp" style="animation-delay: 0.1s;">
@@ -43,6 +42,7 @@
             </div>
         </div>
 
+        @if(esSuperAdmin() || tienePermiso('leerUsuarios'))
         <!-- Usuarios (Solo Super Admin) -->
         <a href="{{ route('usuarios.index') }}" class="bento-card success animate__animated animate__fadeInUp text-decoration-none" style="animation-delay: 0.3s; color: inherit;">
             <div class="bento-card-icon"><i class="fas fa-users"></i></div>
@@ -52,6 +52,17 @@
                 <div style="font-size: 0.8rem; color: var(--text-tertiary); margin-top: 8px;">En el sistema</div>
             </div>
         </a>
+        @else
+        <!-- Artículos a mi cargo Stat -->
+        <a href="#seccionCosasACargo" class="bento-card success animate__animated animate__fadeInUp text-decoration-none" style="animation-delay: 0.3s; color: inherit;">
+            <div class="bento-card-icon"><i class="fas fa-user-shield"></i></div>
+            <div>
+                <div class="stat-label">Bajo Mi Resguardo</div>
+                <div class="stat-value">{{ $totalCosasACargo ?? 0 }}</div>
+                <div style="font-size: 0.8rem; color: var(--text-tertiary); margin-top: 8px;">Artículos y vehículos</div>
+            </div>
+        </a>
+        @endif
         
         <!-- Tarjeta Grande Informativa CTA -->
         <div class="bento-card info bento-large animate__animated animate__fadeInUp" style="animation-delay: 0.4s;">
@@ -62,9 +73,7 @@
                         Administra el inventario corporativo, controla los activos fijos, consumibles, vehículos y da seguimiento a todas las operaciones del grupo en tiempo real.
                     </p>
                     <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                        @if (tienePermiso('fijos - leer') || tienePermiso('consumible - leer') || tienePermiso('compra/venta - leer'))
                         <a href="{{ route('productos') }}" class="btn btn-primary"><i class="fas fa-boxes"></i> Ver Inventario</a>
-                        @endif
                         <a href="{{ route('usuarios.perfil') }}" class="btn btn-secondary"><i class="fas fa-user-cog"></i> Mi Perfil</a>
                     </div>
                 </div>
@@ -73,7 +82,7 @@
                 </div>
             </div>
         </div>
-    @endif
+    </div>
 
     <!-- 1. Cards para Registrar Artículos en el Inventario -->
     <div class="mb-4 animate__animated animate__fadeInUp" style="animation-delay: 0.15s;">
@@ -189,7 +198,11 @@
     </div>
 
     <!-- 2.1 Apartado de Notificaciones: Alerta de Mantenimientos Preventivos (≤ 1 mes / Vencidos) -->
-    @if(esSuperAdmin() || tienePermiso('fijos - leer'))
+    @php
+        $rolUserHome = (int)(Session::get('usuario')?->id_rol ?? 0);
+        $esStaffHome = esSuperAdmin() || esAdmin() || ($rolUserHome > 0 && $rolUserHome <= 3);
+    @endphp
+    @if($esStaffHome || tienePermiso('fijos - leer') || (isset($totalMantenimientosProximos) && $totalMantenimientosProximos > 0))
     <div id="seccion-mantenimientos-alertas" class="mb-4 animate__animated animate__fadeInUp" style="animation-delay: 0.15s;">
         <div class="card border-0 shadow-sm rounded-4 overflow-hidden" 
              style="background: var(--card-bg, #fff); border-left: 5px solid {{ ($totalMantenimientosProximos ?? 0) > 0 ? '#f59e0b' : '#10b981' }} !important; box-shadow: 0 4px 20px rgba(245, 158, 11, 0.08) !important;">
@@ -353,7 +366,7 @@
     @endif
 
     <!-- 2.2 Apartado de Notificaciones / Alertas de Consumibles al 10% -->
-    @if(isset($consumiblesCriticos) && (esSuperAdmin() || tienePermiso('consumible - leer')))
+    @if(isset($consumiblesCriticos) && ($esStaffHome || tienePermiso('consumible - leer') || ($totalConsumiblesCriticos ?? 0) > 0))
     <div class="mb-4 animate__animated animate__fadeInUp" style="animation-delay: 0.2s;">
         <div class="card border-0 shadow-sm rounded-4 overflow-hidden {{ $totalConsumiblesCriticos > 0 ? 'border-start border-danger border-4' : 'border-start border-success border-4' }}" style="background: var(--card-bg, #fff);">
             <div class="card-body p-4">
@@ -469,20 +482,20 @@
 
     <!-- 3. Sección: Artículos a mi Cargo -->
     <div class="mb-4 animate__animated animate__fadeInUp" style="animation-delay: 0.25s;" id="seccionCosasACargo">
-        <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="background: var(--card-bg, #fff);">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="background: var(--bg-card, #fff);">
             <!-- Header de la Sección -->
-            <div class="card-header bg-white border-bottom p-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div class="card-header border-bottom p-4 d-flex flex-wrap justify-content-between align-items-center gap-3" style="background: var(--bg-card, #fff);">
                 <div class="d-flex align-items-center gap-3">
                     <div class="rounded-circle p-3 bg-primary bg-opacity-10 text-primary" style="width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
                         <i class="fas fa-user-shield"></i>
                     </div>
                     <div>
                         <div class="d-flex align-items-center gap-2 flex-wrap">
-                            <h4 class="fw-bold mb-0 text-dark">Artículos a mi cargo</h4>
+                            <h4 class="fw-bold mb-0 text-main">Artículos a mi cargo</h4>
                             @if(($totalCosasACargo ?? 0) > 0)
                                 <span class="badge bg-primary rounded-pill px-3 py-1">{{ $totalCosasACargo }} artículos a mi cargo</span>
                             @else
-                                <span class="badge bg-light text-muted border rounded-pill px-3 py-1">Sin artículos a mi cargo</span>
+                                <span class="badge bg-secondary bg-opacity-25 text-muted border rounded-pill px-3 py-1">Sin artículos a mi cargo</span>
                             @endif
                         </div>
                         <p class="text-muted small mb-0 mt-1">Vehículos, equipo de cómputo y mobiliario bajo tu resguardo personal.</p>
@@ -533,15 +546,15 @@
                         <div class="row g-3">
                             @foreach($misVehiculos as $veh)
                             <div class="col-lg-6 col-xl-4">
-                                <div class="card border rounded-3 h-100 shadow-xs overflow-hidden" style="background: #fafafa;">
-                                    <div class="p-3 bg-white border-bottom d-flex justify-content-between align-items-center">
+                                <div class="card border rounded-3 h-100 shadow-sm overflow-hidden" style="background: var(--bg-card, #ffffff);">
+                                    <div class="p-3 border-bottom d-flex justify-content-between align-items-center" style="background: var(--bg-hover, rgba(0,0,0,0.02));">
                                         <div>
-                                            <h6 class="fw-bold mb-0 text-dark">
+                                            <h6 class="fw-bold mb-0 text-main">
                                                 <i class="fas fa-car text-primary me-1"></i> {{ $veh->marca }} {{ $veh->modelo }}
                                             </h6>
                                             <small class="text-muted">Año: {{ $veh->año ?? 'N/A' }}</small>
                                         </div>
-                                        <span class="badge bg-dark text-white rounded-pill px-2 py-1 font-monospace" style="letter-spacing: 1px;">
+                                        <span class="badge bg-dark border border-secondary text-white rounded-pill px-2 py-1 font-monospace" style="letter-spacing: 1px;">
                                             {{ $veh->placas }}
                                         </span>
                                     </div>
@@ -549,26 +562,26 @@
                                         <div>
                                             <div class="row g-2 small text-muted mb-2">
                                                 <div class="col-6">
-                                                    <strong>Color:</strong> {{ $veh->color ?? 'N/A' }}
+                                                    <strong class="text-main">Color:</strong> {{ $veh->color ?? 'N/A' }}
                                                 </div>
                                                 <div class="col-6">
-                                                    <strong>Transmisión:</strong> {{ $veh->transmision ?? 'N/A' }}
+                                                    <strong class="text-main">Transmisión:</strong> {{ $veh->transmision ?? 'N/A' }}
                                                 </div>
                                                 <div class="col-12">
                                                     <i class="fas fa-map-marker-alt text-danger me-1"></i>
-                                                    <strong>Ubicación:</strong> {{ $veh->ubicacion?->nombre ?? 'Sin ubicación' }}
+                                                    <strong class="text-main">Ubicación:</strong> {{ $veh->ubicacion?->nombre ?? 'Sin ubicación' }}
                                                 </div>
                                             </div>
 
                                             <!-- Estado del Mantenimiento -->
                                             @if($veh->mantenimientos->count() > 0)
                                                 @php $ultimoM = $veh->mantenimientos->first(); @endphp
-                                                <div class="p-2 rounded bg-light border-start border-warning border-3 mb-2">
+                                                <div class="p-2 rounded bg-warning bg-opacity-10 border-start border-warning border-3 mb-2">
                                                     <div class="d-flex justify-content-between align-items-center">
-                                                        <strong class="text-dark small" style="font-size: 0.8rem;">
+                                                        <strong class="text-warning small" style="font-size: 0.8rem;">
                                                             <i class="fas fa-wrench text-warning me-1"></i> {{ $ultimoM->tipo_servicio }}
                                                         </strong>
-                                                        <span class="badge bg-warning text-dark" style="font-size: 0.7rem;">
+                                                        <span class="badge bg-warning text-dark font-monospace" style="font-size: 0.7rem;">
                                                             {{ \Carbon\Carbon::parse($ultimoM->fecha)->format('d/m/Y') }}
                                                         </span>
                                                     </div>
@@ -577,7 +590,7 @@
                                                     </small>
                                                 </div>
                                             @else
-                                                <div class="p-2 rounded bg-light border-start border-info border-3 mb-2">
+                                                <div class="p-2 rounded bg-info bg-opacity-10 border-start border-info border-3 mb-2">
                                                     <small class="text-muted" style="font-size: 0.75rem;">
                                                         <i class="fas fa-check-circle text-info me-1"></i> Sin mantenimientos registrados pendientes
                                                     </small>
@@ -599,7 +612,7 @@
                                                 <i class="fas fa-wrench"></i>
                                             </a>
                                             <a href="{{ route('vehiculos.ver', $veh->id) }}" 
-                                               class="btn btn-light border btn-sm rounded-pill px-3 py-1"
+                                               class="btn btn-outline-info btn-sm rounded-pill px-3 py-1"
                                                style="font-size: 0.75rem;" 
                                                title="Ver detalles del vehículo">
                                                 <i class="fas fa-eye"></i>
@@ -624,9 +637,9 @@
                         <div class="row g-3">
                             @foreach($misActivosFijos as $fijo)
                             <div class="col-lg-6 col-xl-4">
-                                <div class="card border rounded-3 h-100 shadow-xs overflow-hidden" style="background: #fafafa;">
-                                    <div class="p-3 bg-white border-bottom d-flex justify-content-between align-items-center">
-                                        <h6 class="fw-bold mb-0 text-dark text-truncate me-2 d-inline-flex align-items-center gap-1" title="{{ $fijo->producto?->nombre }}">
+                                <div class="card border rounded-3 h-100 shadow-sm overflow-hidden" style="background: var(--bg-card, #ffffff);">
+                                    <div class="p-3 border-bottom d-flex justify-content-between align-items-center" style="background: var(--bg-hover, rgba(0,0,0,0.02));">
+                                        <h6 class="fw-bold mb-0 text-main text-truncate me-2 d-inline-flex align-items-center gap-1" title="{{ $fijo->producto?->nombre }}">
                                             <iconify-icon icon="lucide:monitor" width="16" height="16" class="text-primary flex-shrink-0"></iconify-icon>
                                             <span class="text-truncate">{{ $fijo->producto?->nombre ?? 'Activo Fijo' }}</span>
                                         </h6>
@@ -748,7 +761,7 @@
                                                 <iconify-icon icon="lucide:wrench" width="14" height="14"></iconify-icon>
                                             </a>
                                             <a href="{{ route('productos_fijos.viewFijos', $fijo->id) }}" 
-                                               class="btn btn-light border btn-sm rounded-pill px-3 py-1 d-inline-flex align-items-center justify-content-center"
+                                               class="btn btn-outline-info btn-sm rounded-pill px-3 py-1 d-inline-flex align-items-center justify-content-center"
                                                style="font-size: 0.75rem;" 
                                                title="Ver detalles y mantenimientos">
                                                 <iconify-icon icon="lucide:eye" width="15" height="15" class="text-primary"></iconify-icon>

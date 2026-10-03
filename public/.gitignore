@@ -1,2 +1,7 @@
-*
-!.gitignore
+/hot
+/storage
+/error_log
+/respaldos/
+/raw.php
+/*.xlsx
+

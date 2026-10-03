@@ -3,5 +3,5 @@
 @import "animate.css/animate.min.css";
 @import "bootstrap-icons/font/bootstrap-icons.css";
 
-@import "../../public/css/home.css";
-@import "../../public/css/sgi-design.css";
+@import "./home.css";
+@import "./sgi-design.css";

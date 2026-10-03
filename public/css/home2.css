@@ -1,0 +1,50 @@
+    .text-gradient {
+        background: linear-gradient(45deg, #4361ee, #3a0ca3);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        font-weight: 700;
+    }
+
+    .hover-scale {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .hover-scale:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .bg-purple {
+        background: linear-gradient(45deg, #7209b7, #4361ee);
+    }
+
+    .alert-glass {
+        background-color: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .animate__animated {
+        animation-fill-mode: forwards;
+    }
+
+    .animate__fadeIn {
+        animation: fadeIn 0.8s ease-out;
+    }
+
+    .animate__fadeInUp {
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 100;
+            transform: translateY(0);
+        }
+    }

@@ -8,6 +8,10 @@
     <title>@yield('title', 'Home')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    <!-- Estilos directos del Sistema SGI -->
+    <link rel="stylesheet" href="{{ asset('css/sgi-design.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/home.css') }}?v={{ time() }}">
+
     <!-- Iconos FontAwesome, Bootstrap Icons e Iconify CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -146,7 +150,10 @@
 
                         {{-- Empresas --}}
                         @php
-                        $mostrarEmpresas = tienePermiso('leerEmpresaInterna') || tienePermiso('leerEmpresaExterna') || tienePermiso('leerUbicaciones');
+                        $usuarioNav = Session::get('usuario');
+                        $rolIdNav = (int)($usuarioNav?->id_rol ?? 0);
+                        $esStaff = esSuperAdmin() || esAdmin() || ($rolIdNav > 0 && $rolIdNav <= 3);
+                        $mostrarEmpresas = tienePermiso('leerEmpresaInterna') || tienePermiso('leerEmpresaExterna') || tienePermiso('leerUbicaciones') || $esStaff;
                         @endphp
                         @if ($mostrarEmpresas)
                         <li class="nav-item dropdown">
@@ -154,7 +161,7 @@
                                 <i class="fas fa-building me-2"></i> Empresas
                             </a>
                             <ul class="dropdown-menu shadow-lg dropdown-menu-end">
-                                @if (tienePermiso('leerEmpresaInterna'))
+                                @if (tienePermiso('leerEmpresaInterna') || $esStaff)
                                 <li>
                                     <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('empresa.index') }}">
                                         <span class="badge bg-primary bg-opacity-10 text-primary me-2"><i class="fas fa-cube"></i></span>
@@ -163,7 +170,7 @@
                                     </a>
                                 </li>
                                 @endif
-                                @if (tienePermiso('leerEmpresaExterna'))
+                                @if (tienePermiso('leerEmpresaExterna') || $esStaff)
                                 <li>
                                     <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('empresa.indexExterna') }}">
                                         <span class="badge bg-success bg-opacity-10 text-success me-2"><i class="fas fa-tint"></i></span>
@@ -172,7 +179,7 @@
                                     </a>
                                 </li>
                                 @endif
-                                @if (tienePermiso('leerUbicaciones'))
+                                @if (tienePermiso('leerUbicaciones') || $esStaff)
                                 <li>
                                     <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('empresa.ubicaciones') }}">
                                         <span class="badge bg-info bg-opacity-10 text-info me-2"><i class="fas fa-map-marker-alt"></i></span>
@@ -187,7 +194,7 @@
 
                         {{-- Productos --}}
                         @php
-                        $mostrarProductos = tienePermiso('fijos - leer') || tienePermiso('consumible - leer') || tienePermiso('compra/venta - leer') || tienePermiso('vehiculo - leer');
+                        $mostrarProductos = tienePermiso('fijos - leer') || tienePermiso('consumible - leer') || tienePermiso('compra/venta - leer') || tienePermiso('vehiculo - leer') || $esStaff;
                         @endphp
                         @if ($mostrarProductos)
                         <li class="nav-item dropdown">
@@ -206,7 +213,7 @@
                                     <hr class="dropdown-divider mx-3">
                                 </li>
 
-                                @if (tienePermiso('fijos - leer'))
+                                @if (tienePermiso('fijos - leer') || $esStaff)
                                 <li>
                                     <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('productos.indexFijos') }}">
                                         <span class="badge bg-primary bg-opacity-10 text-primary me-2"><i class="fas fa-cube"></i></span>
@@ -216,7 +223,7 @@
                                 </li>
                                 @endif
 
-                                @if (tienePermiso('consumible - leer'))
+                                @if (tienePermiso('consumible - leer') || $esStaff)
                                 <li>
                                     <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('productos_consumibles.index') }}">
                                         <span class="badge bg-danger bg-opacity-10 text-danger me-2"><i class="fas fa-utensils"></i></span>
@@ -226,7 +233,7 @@
                                 </li>
                                 @endif
 
-                                @if (tienePermiso('compra/venta - leer'))
+                                @if (tienePermiso('compra/venta - leer') || $esStaff)
                                 <li>
                                     <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('productos_compra_venta.index') }}">
                                         <span class="badge bg-warning bg-opacity-10 text-warning me-2"><i class="fas fa-exchange-alt"></i></span>
@@ -236,7 +243,7 @@
                                 </li>
                                 @endif
 
-                                @if(tienePermiso('vehiculo - leer'))
+                                @if(tienePermiso('vehiculo - leer') || $esStaff)
                                 <li>
                                     <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('vehiculos.index') }}">
                                         <span class="badge bg-info bg-opacity-10 text-info me-2"><i class="fas fa-car"></i></span>
@@ -278,7 +285,7 @@
                         </li>
                         @endif
                         {{-- Categorías / Etiquetas --}}
-                        @if (tienePermiso('leerEtiquetas') || esSuperAdmin())
+                        @if (tienePermiso('leerEtiquetas') || esSuperAdmin() || $esStaff)
                         <li class="nav-item dropdown">
                             <a class="nav-link nav-link-custom dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fas fa-tags me-2"></i> Categorías
@@ -308,8 +315,8 @@
 
                     {{-- Notificaciones de Mantenimiento y Stock Crítico --}}
                     @php
-                        $puedeVerConsumibles = esSuperAdmin() || tienePermiso('consumible - leer');
-                        $puedeVerMantenimiento = esSuperAdmin() || tienePermiso('fijos - leer');
+                        $puedeVerConsumibles = esSuperAdmin() || tienePermiso('consumible - leer') || $esStaff;
+                        $puedeVerMantenimiento = esSuperAdmin() || tienePermiso('fijos - leer') || $esStaff;
                         
                         $alertasStockCriticoList = ($puedeVerConsumibles && function_exists('obtenerConsumiblesCriticos')) ? obtenerConsumiblesCriticos() : collect();
                         $countStockCritico = ($puedeVerConsumibles && function_exists('contarConsumiblesCriticos')) ? contarConsumiblesCriticos() : 0;
@@ -319,7 +326,7 @@
 
                         $totalAlertas = $countStockCritico + $countMnt;
                     @endphp
-                    @if($puedeVerConsumibles || $puedeVerMantenimiento)
+                    @if($puedeVerConsumibles || $puedeVerMantenimiento || $esStaff)
                         <div class="nav-item dropdown me-3 list-unstyled">
                             <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--text-main);" title="Notificaciones del Sistema: Mantenimientos y Stock">
                                 <i class="fas fa-bell fs-5"></i>
