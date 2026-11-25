@@ -5,59 +5,85 @@ $etiquetasUnicas = \App\Models\Etiqueta::obtenerEtiquetasActivas();
 ?>
 @section('content')
 <div class="container main-content animate__animated animate__fadeIn">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-5">
-        <div class="mb-3 mb-md-0">
+    <div class="sgi-page-header d-flex flex-column flex-md-row justify-content-between align-items-stretch align-items-md-center gap-3 mb-4 mb-md-5">
+        <div>
             <h1 class="display-5 fw-bold text-gradient mb-2">
                 <i class="fas fa-store me-2"></i>Productos de Compra/Venta
             </h1>
-            <p class="lead text-muted">
+            <p class="lead text-muted mb-0">
                 <i class="fas fa-info-circle me-2"></i>Inventario de productos disponibles para comercialización
             </p>
         </div>
 
-        <div class="d-flex flex-column flex-md-row align-items-end align-items-md-center gap-2">
-            <div class="d-flex gap-2">
-                @if(tienePermiso('compra/venta - insertar'))
-                <button id="btnInsertar" type="button" class="btn btn-primary"
-                    data-bs-toggle="modal" data-bs-target="#insertarProductoCompraVentaModal">
-                    <i class="fas fa-plus-circle me-2"></i>Nuevo Producto
-                </button>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#importModal">
-                    Importar Productos
-                </button>
-                <a href="{{ route('plantilla.compraventa') }}" class="btn btn-primary">
-                    Descargar Plantilla – Compra/Venta
-                </a>
-                @endif
-            </div>
+        <div class="sgi-header-actions d-flex flex-wrap align-items-center gap-2">
             <span class="badge bg-primary bg-opacity-10 text-primary fs-6" id="badge-total-compraventa">
                 <i class="fas fa-cubes me-1"></i> Total: {{ $productosCompraVenta->total() }}
             </span>
+            @if(tienePermiso('compra/venta - insertar'))
+            <button id="btnInsertar" type="button" class="btn btn-primary"
+                data-bs-toggle="modal" data-bs-target="#insertarProductoCompraVentaModal">
+                <i class="fas fa-plus-circle me-1"></i>Nuevo Producto
+            </button>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#importModal">
+                <i class="fas fa-file-import me-1"></i>Importar
+            </button>
+            <a href="{{ route('plantilla.compraventa') }}" class="btn btn-primary">
+                <i class="fas fa-file-excel me-1"></i>Plantilla Compra/Venta
+            </a>
+            @endif
         </div>
     </div>
+
+    @if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+    @endif
+
+    @if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+        <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+    @endif
+
+    @if($errors->any())
+    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i><strong>Por favor revise los siguientes errores:</strong>
+        <ul class="mb-0 mt-1 ps-3">
+            @foreach($errors->all() as $error)
+            <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+    @endif
 
     <div class="card glass-nav border-0 shadow-sm overflow-hidden">
         <div class="card-body p-0">
             <div class="table-responsive">
+                <div class="p-3 pb-0">
+                    <form action="{{ route('imprimirCompraVenta') }}" method="post" class="print-form">
+                        @csrf
+                        <input type="hidden" name="producto" value='@json($productosCompraVentaTodos)'>
+                        <button type="submit" class="print-button">
+                            <i class="fas fa-print"></i> Imprimir Reporte
+                        </button>
+                    </form>
+                </div>
                 <form id="form-filtros" onsubmit="event.preventDefault(); fetchCompraVenta();">
-                    <div class="mb-4" style="padding: 20px;">
-                        <form action="{{ route('imprimirCompraVenta') }}" method="post" class="print-form">
-                            @csrf
-                            <input type="hidden" name="producto" value='@json($productosCompraVentaTodos)'>
-                            <button type="submit" class="print-button">
-                                <i class="fas fa-print"></i> Imprimir Reporte
-                            </button>
-                        </form>
-                        <strong class="me-2"><i class="fas fa-tags me-1"></i>Filtrar por categoría:</strong>
+                    <div class="px-3 pb-3 d-flex flex-wrap align-items-center gap-1">
+                        <strong class="me-2 w-100 w-md-auto mb-1 mb-md-0"><i class="fas fa-tags me-1"></i>Filtrar por categoría:</strong>
                         <input type="hidden" name="etiquetas[]" value="" />
                         @foreach($etiquetasUnicas as $etiqueta)
                         <input type="checkbox" class="btn-check filtro-api-cv" name="etiquetas[]" value="{{ strtolower($etiqueta->nombre) }}" id="etiquetas-{{ $etiqueta->id }}" {{ in_array(strtolower($etiqueta->nombre), (array)request('etiquetas')) ? 'checked' : '' }}>
-                        <label class="btn btn-sm btn-outline-primary me-2 mb-1" for="etiquetas-{{ $etiqueta->id }}">
+                        <label class="btn btn-sm btn-outline-primary me-1 mb-1" for="etiquetas-{{ $etiqueta->id }}">
                             {{ $etiqueta->nombre }}
                         </label>
                         @endforeach
                     </div>
-                    <table class="table table-hover align-middle mb-0">
+                    <table class="table table-hover align-middle mb-0 sgi-mobile-cards">
                         <thead class="table-light">
                             <tr>
                                 <th class="ps-4" style="width: 60px;">#</th>
@@ -70,7 +96,7 @@ $etiquetasUnicas = \App\Models\Etiqueta::obtenerEtiquetasActivas();
                                 <th>Fecha Salida</th>
                                 <th class="pe-4 text-end">Acciones</th>
                             </tr>
-                            <tr>
+                            <tr class="sgi-filter-row">
                                 <th></th>
                                 <th><input type="text" name="nombre" class="form-control form-control-sm filtro-api-cv-text" placeholder="Buscar nombre..." value="{{ request('nombre') }}"></th>
                                 <th><input type="text" name="empresa" class="form-control form-control-sm filtro-api-cv-text" placeholder="Buscar empresa..." value="{{ request('empresa') }}"></th>
@@ -79,7 +105,7 @@ $etiquetasUnicas = \App\Models\Etiqueta::obtenerEtiquetasActivas();
                                 <th><input type="text" name="estado" class="form-control form-control-sm filtro-api-cv-text" placeholder="Estado..." value="{{ request('estado') }}"></th>
                                 <th><input type="date" name="fechaEntrada" class="form-control form-control-sm filtro-api-cv" value="{{ request('fechaEntrada') }}" style="min-width: 130px;"></th>
                                 <th><input type="date" name="fechaSalida" class="form-control form-control-sm filtro-api-cv" value="{{ request('fechaSalida') }}" style="min-width: 130px;"></th>
-                                <th><button type="button" class="btn btn-sm btn-primary" onclick="fetchCompraVenta()"><i class="fas fa-search"></i></button></th>
+                                <th><button type="button" class="btn btn-sm btn-primary" onclick="fetchCompraVenta()"><i class="fas fa-search"></i><span class="d-md-none ms-1">Buscar</span></button></th>
                             </tr>
                         </thead>
                         <tbody id="tbody-compraventa">
@@ -97,7 +123,7 @@ $etiquetasUnicas = \App\Models\Etiqueta::obtenerEtiquetasActivas();
     </div>
 
     <!-- Paginación Asíncrona API Compra/Venta -->
-    <div class="d-flex justify-content-between align-items-center mt-4" id="contenedor-paginacion-cv">
+    <div class="sgi-pagination-bar d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 mt-4" id="contenedor-paginacion-cv">
         <div class="text-muted" id="info-paginacion-cv">
             Mostrando {{ $productosCompraVenta->firstItem() ?? 0 }} a {{ $productosCompraVenta->lastItem() ?? 0 }} de {{ $productosCompraVenta->total() ?? 0 }} registros
         </div>
@@ -213,29 +239,29 @@ function renderTablaCompraVenta(data, meta) {
         const num = offset + idx + 1;
         const fechaE = p.fecha_entrada ? formatDateCV(p.fecha_entrada) : 'N/A';
         const fechaS = p.fecha_salida ? formatDateCV(p.fecha_salida) : '-';
-        const estadoBadge = p.estado === 'activo' ? 'success' : 'secondary';
+        const estadoBadge = (p.estado === 'almacen' || p.estado === 'activo') ? 'success' : (p.estado === 'vendido' ? 'danger' : 'secondary');
 
         html += `
             <tr class="hover-scale">
-                <td class="ps-4 text-muted">${num}</td>
-                <td><strong>${escapeHtmlCV(p.nombre || 'Sin nombre')}</strong></td>
-                <td><span class="badge bg-info bg-opacity-10 text-info">${escapeHtmlCV(p.empresa || 'Sin empresa')}</span></td>
-                <td>
+                <td class="ps-4 text-muted" data-label="#">${num}</td>
+                <td data-label="Nombre"><strong>${escapeHtmlCV(p.nombre || 'Sin nombre')}</strong></td>
+                <td data-label="Empresa a vender"><span class="badge bg-info bg-opacity-10 text-info">${escapeHtmlCV(p.empresa || 'Sin empresa')}</span></td>
+                <td data-label="Ubicación">
                     <span class="badge bg-info bg-opacity-10 text-info">
                         <i class="fas fa-map-marker-alt me-1"></i> ${escapeHtmlCV(p.ubicacion || 'Sin ubicación')}
                     </span>
                 </td>
-                <td>${p.existencia || 0}</td>
-                <td>
+                <td data-label="Existencia">${p.existencia || 0}</td>
+                <td data-label="Estado">
                     <span class="badge rounded-pill bg-${estadoBadge} bg-opacity-10 text-${estadoBadge}">
                         ${capitalizeCV(p.estado || 'desconocido')}
                     </span>
                 </td>
-                <td><span class="text-muted">${fechaE}</span></td>
-                <td><span class="text-muted">${fechaS}</span></td>
-                <td class="pe-4 text-end">
+                <td data-label="Fecha Entrada"><span class="text-muted">${fechaE}</span></td>
+                <td data-label="Fecha Salida"><span class="text-muted">${fechaS}</span></td>
+                <td class="pe-4 text-end" data-label="Acciones">
                     <div class="d-flex justify-content-end gap-2">
-                        <a href="/productos-compraventa/${p.id}" class="btn btn-sm btn-outline-primary btn-float" data-bs-toggle="tooltip" title="Ver detalle">
+                        <a href="{{ url('productos-compra-venta') }}/${p.id}" class="btn btn-sm btn-outline-primary btn-float" data-bs-toggle="tooltip" title="Ver detalle">
                             <i class="fas fa-eye"></i>
                         </a>
                     </div>

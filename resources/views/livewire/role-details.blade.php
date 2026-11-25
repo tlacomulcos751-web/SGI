@@ -8,14 +8,14 @@ $permisos = $selectedRole ? VistaPermiso::where('rol', $selectedRole->id)->get()
 <div class="card shadow-sm">
     @isset($selectedRole)
     <div class="card-header bg-primary bg-opacity-10 border-bottom border-primary border-opacity-25">
-        <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
             <div>
                 <h2 class="h4 mb-0 fw-bold text-primary">
                     <i class="bi bi-person-badge-fill me-2"></i>{{ $selectedRole->nombre }}
                 </h2>
                 <small class="text-primary opacity-75">ID: {{ $selectedRole->id }}</small>
             </div>
-            <div>
+            <div class="d-flex flex-wrap gap-2">
                 @if(tienePermiso('modificarRol'))
                 <button class="btn btn-sm btn-outline-primary me-2" onclick='abrirModalEditar(@json($selectedRole))'>
                     <i class="bi bi-pencil-square"></i> Editar
@@ -55,6 +55,7 @@ $permisos = $selectedRole ? VistaPermiso::where('rol', $selectedRole->id)->get()
                 'titulo' => 'Permisos Generales',
                 'grupos' => $gruposGenerales,
                 'tituloGrupoIcono' => 'sliders',
+                'collapsed' => true,
                 'labelCallback' => fn($permiso) => formatCamelCase($permiso->permiso_nombre)
                 ])
 
@@ -71,6 +72,7 @@ $permisos = $selectedRole ? VistaPermiso::where('rol', $selectedRole->id)->get()
                 'titulo' => 'Permisos de Productos',
                 'grupos' => $gruposProductos,
                 'tituloGrupoIcono' => 'tag',
+                'collapsed' => true,
                 'labelCallback' => fn($permiso) => cleanAction($permiso->permiso_nombre)
                 ])
 
@@ -83,6 +85,7 @@ $permisos = $selectedRole ? VistaPermiso::where('rol', $selectedRole->id)->get()
                 @include('components.permisos.permiso-empresas', compact('empresas', 'ubicaciones'))
 
             </div>
+
 
             <div class="mt-4 d-flex justify-content-end">
                 <button class="btn btn-primary me-2">

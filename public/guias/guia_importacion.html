@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Guía Oficial de Importación - SGI</title>
+    <style>
+        @page {
+            size: letter;
+            margin: 14mm 14mm 14mm 14mm;
+        }
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            color: #1f2937;
+            background: #ffffff;
+            margin: 0;
+            padding: 0;
+            font-size: 11pt;
+            line-height: 1.45;
+        }
+        .header {
+            border-bottom: 3px solid #065f46;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+        .header h1 {
+            color: #065f46;
+            font-size: 20pt;
+            margin: 0 0 4px 0;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+        .header .subtitle {
+            font-size: 11pt;
+            color: #4b5563;
+            font-weight: 500;
+        }
+        .header .tag {
+            background-color: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 9pt;
+            font-weight: 700;
+            text-align: right;
+        }
+        h2 {
+            color: #111827;
+            font-size: 13pt;
+            border-bottom: 1.5px solid #e5e7eb;
+            padding-bottom: 5px;
+            margin-top: 18px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        h2 .badge-num {
+            background: #065f46;
+            color: #ffffff;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10pt;
+            margin-right: 8px;
+            font-weight: bold;
+        }
+        p {
+            margin: 0 0 8px 0;
+            font-size: 10pt;
+            color: #374151;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 14px;
+            font-size: 9.5pt;
+        }
+        th {
+            background-color: #065f46;
+            color: #ffffff;
+            font-weight: 600;
+            text-align: left;
+            padding: 7px 10px;
+            font-size: 9pt;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        td {
+            padding: 6px 10px;
+            border-bottom: 1px solid #e5e7eb;
+            vertical-align: middle;
+        }
+        tr:nth-child(even) td {
+            background-color: #f9fafb;
+        }
+        code, .code {
+            font-family: 'Consolas', 'Courier New', monospace;
+            background: #f3f4f6;
+            color: #047857;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 9.5pt;
+            border: 1px solid #e5e7eb;
+        }
+        .callout {
+            border-radius: 6px;
+            padding: 10px 14px;
+            margin-bottom: 12px;
+            font-size: 9.5pt;
+        }
+        .callout-warning {
+            background-color: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            color: #92400e;
+        }
+        .callout-info {
+            background-color: #f0fdf4;
+            border-left: 4px solid #10b981;
+            color: #065f46;
+        }
+        .grid-2 {
+            display: flex;
+            gap: 14px;
+        }
+        .grid-2 > div {
+            flex: 1;
+        }
+        .page-break {
+            page-break-before: always;
+        }
+        .footer {
+            margin-top: 15px;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 8px;
+            font-size: 8.5pt;
+            color: #9ca3af;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- PÁGINA 1 -->
+    <div class="header">
+        <div>
+            <h1>SGI · GUÍA DE CAPTURA E IMPORTACIÓN</h1>
+            <div class="subtitle">Manual de opciones válidas para carga masiva de Activos Fijos y Consumibles</div>
+        </div>
+        <div class="tag">
+            VERSIÓN 2026<br>
+            SGI GRUPO NODO
+        </div>
+    </div>
+
+    <div class="callout callout-info">
+        <strong>Plantillas con códigos listos:</strong> Se generaron 2 plantillas oficiales con encabezados en color verde institucional y <strong>200 códigos de barra EAN-13 únicos prellenados</strong> para que tu compañero solo tenga que llenar los datos descriptivos. Si utiliza menos de 200 filas, el importador <strong>omitirá automáticamente las vacías</strong> sin marcar error.
+    </div>
+
+    <h2><span class="badge-num">1</span> Catálogo de Ubicaciones Válidas (Columna: <code>ubicacion</code>)</h2>
+    <p>Para <strong>Consumibles</strong> la ubicación debe coincidir <em>exactamente</em> con el catálogo. Para <strong>Activos Fijos</strong>, si se ingresa una no listada, el sistema la creará en automático.</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 32%;">Nombre Exacto</th>
+                <th style="width: 40%;">Área / Descripción sugerida</th>
+                <th style="width: 28%;">Uso común</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td><code>01_Mb01</code></td><td>Módulo u oficina 01 (Mobiliario)</td><td>Mobiliario y equipo</td></tr>
+            <tr><td><code>01_Mb02</code></td><td>Módulo u oficina 02 (Mobiliario)</td><td>Mobiliario y equipo</td></tr>
+            <tr><td><code>Almacen (of Lic Sandra)</code></td><td>Almacén en oficina Lic. Sandra</td><td>Consumibles y papelería</td></tr>
+            <tr><td><code>Bodega NAO</code></td><td>Bodega general NAO</td><td>Herramientas y stock</td></tr>
+            <tr><td><code>BODEGA NAO 01</code></td><td>Bodega seccional 01</td><td>Stock principal</td></tr>
+            <tr><td><code>BODEGA NAO 2</code></td><td>Bodega seccional 02</td><td>Stock secundario</td></tr>
+            <tr><td><code>Cochera de Adamant</code></td><td>Área de cochera en Adamant</td><td>Equipos grandes / vehículos</td></tr>
+            <tr><td><code>escondite nao</code></td><td>Área interna de resguardo NAO</td><td>Resguardo especializado</td></tr>
+            <tr><td><code>Estacionamiento NAO</code></td><td>Área externa de estacionamiento</td><td>Vehículos y patio</td></tr>
+            <tr><td><code>Gab_limpieza</code></td><td>Gabinete de artículos de limpieza</td><td>Consumibles de limpieza</td></tr>
+            <tr><td><code>Minigaby</code></td><td>Gabinete de resguardo menor</td><td>Consumibles y accesorios</td></tr>
+            <tr><td><code>Recepcion</code></td><td>Recepción principal</td><td>Equipo de recepción</td></tr>
+            <tr><td><code>Recepción G1</code></td><td>Recepción Grupo 1</td><td>Mobiliario y cómputo</td></tr>
+            <tr><td><code>Renegados</code></td><td>Área de material en revisión / cuarentena</td><td>Equipos en evaluación</td></tr>
+            <tr><td><code>Reo Caj herramientas</code></td><td>Caja / almacén de herramientas</td><td>Herramienta fija</td></tr>
+            <tr><td><code>Traslado - Ruta</code></td><td>En tránsito o ruta</td><td>Equipos móviles</td></tr>
+        </tbody>
+    </table>
+
+    <div class="grid-2">
+        <div>
+            <h2><span class="badge-num">2</span> Empresas Registradas (<code>empresa</code>)</h2>
+            <p>Escribe el nombre de la empresa interna dueña del bien:</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nombre en Sistema</th>
+                        <th>Cómo escribirlo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>Adamant</strong></td><td><code>Adamant</code></td></tr>
+                    <tr><td><strong>Nao Proyectos Creativos</strong></td><td><code>Nao Proyectos Creativos</code> <em>(o <code>Nao</code>)</em></td></tr>
+                </tbody>
+            </table>
+            <small style="color: #6b7280;">* Si se deja en blanco, quedará sin empresa asignada.</small>
+        </div>
+        <div>
+            <h2><span class="badge-num">3</span> Estados y Calidad (Solo Fijos)</h2>
+            <p>Escribir estrictamente en <strong>minúsculas</strong>:</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Columna</th>
+                        <th>Valores Permitidos</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>estado</code></td>
+                        <td><code>activo</code> (default), <code>reparacion</code>, <code>baja</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>calidad</code></td>
+                        <td><code>bueno</code> (default), <code>regular</code>, <code>malo</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- PÁGINA 2 -->
+    <div class="page-break"></div>
+
+    <div class="header">
+        <div>
+            <h1>SGI · GUÍA DE CAPTURA E IMPORTACIÓN</h1>
+            <div class="subtitle">Responsables, Reglas de Formato y Estructura de Columnas</div>
+        </div>
+        <div class="tag">PÁGINA 2 DE 2</div>
+    </div>
+
+    <h2><span class="badge-num">4</span> Responsables Válidos (Columna: <code>responsable</code> - Activos Fijos)</h2>
+    <p>El sistema busca coincidencias por nombre y apellido. Si se deja en blanco o se escribe <code>Sin responsable</code>, se asignará a quien suba el archivo:</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 35%;">Nombre Completo Válido</th>
+                <th style="width: 35%;">Nombre Completo Válido</th>
+                <th style="width: 30%;">Nombre Completo Válido</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>Alma Rosa Cruz</code></td>
+                <td><code>Marcela rivero</code></td>
+                <td><code>ramon espinosa</code></td>
+            </tr>
+            <tr>
+                <td><code>Amaury Rodriguez</code></td>
+                <td><code>Miguel Angel Morales</code></td>
+                <td><code>victor uriel Perez</code></td>
+            </tr>
+            <tr>
+                <td><code>Jocelyn Del Rio</code></td>
+                <td><code>Oscar Huerta</code></td>
+                <td><code>Super Admin</code></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2><span class="badge-num">5</span> Reglas de Formato para Cada Columna</h2>
+
+    <div class="callout callout-warning">
+        <strong>⚠️ 3 Puntos Críticos para que la Importación sea Exitosa:</strong>
+        <ol style="margin: 6px 0 0 16px; padding: 0;">
+            <li><strong>No cambiar los encabezados:</strong> Mantener los nombres exactos en la fila 1 (en minúsculas con guiones bajos).</li>
+            <li><strong>Fecha en Activos Fijos:</strong> Debe tener el formato <code>DD/MM/AAAA</code> (por ejemplo: <code>07/10/2026</code>).</li>
+            <li><strong>Códigos de Barra:</strong> Usar los 200 códigos prellenados en la plantilla o colocar un código único sin espacios.</li>
+        </ol>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 22%;">Campo</th>
+                <th style="width: 14%;">¿Obligatorio?</th>
+                <th style="width: 32%;">Formato / Regla</th>
+                <th style="width: 32%;">Ejemplo de Captura</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>nombre_del_producto</code></td>
+                <td><strong>SÍ (Fijos y Cons.)</strong></td>
+                <td>Texto (hasta 150 caracteres)</td>
+                <td><code>Laptop Lenovo ThinkPad E14</code></td>
+            </tr>
+            <tr>
+                <td><code>descripcion</code></td>
+                <td>Opcional</td>
+                <td>Detalles técnicos, modelo o serie</td>
+                <td><code>Intel Core i5, 16GB RAM, SSD 512GB</code></td>
+            </tr>
+            <tr>
+                <td><code>codigo_de_barra</code></td>
+                <td><strong>SÍ (Fijos y Cons.)</strong></td>
+                <td>Código numérico o alfanumérico</td>
+                <td><em>(Ya prellenado en la plantilla)</em></td>
+            </tr>
+            <tr>
+                <td><code>precio</code></td>
+                <td>Opcional</td>
+                <td>Número decimal, <code>N/A</code> o vacío</td>
+                <td><code>12500.00</code> o <code>N/A</code></td>
+            </tr>
+            <tr>
+                <td><code>cantidad</code> <em>(Fijos)</em></td>
+                <td><strong>SÍ (Fijos)</strong></td>
+                <td>Entero mayor o igual a 1</td>
+                <td><code>1</code></td>
+            </tr>
+            <tr>
+                <td><code>existencia</code> <em>(Consumibles)</em></td>
+                <td><strong>SÍ (Consumibles)</strong></td>
+                <td>Entero mayor o igual a 0</td>
+                <td><code>25</code></td>
+            </tr>
+            <tr>
+                <td><code>fecha_de_entrada</code></td>
+                <td><strong>SÍ (Fijos)</strong></td>
+                <td>Formato <code>DD/MM/AAAA</code></td>
+                <td><code>15/10/2026</code></td>
+            </tr>
+            <tr>
+                <td><code>comentario</code></td>
+                <td>Opcional</td>
+                <td>Observaciones adicionales</td>
+                <td><code>Asignado a oficina comercial</code></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <span>Sistema de Gestión de Inventarios (SGI) · Grupo Nodo</span>
+        <span>Archivos: <code>plantilla_consumibles_con_codigos.xlsx</code> | <code>plantilla_activosfijos_con_codigos.xlsx</code></span>
+    </div>
+
+</body>
+</html>

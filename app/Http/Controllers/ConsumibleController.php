@@ -31,30 +31,46 @@ class ConsumibleController extends Controller
 
         $cantidadPorPagina = 15;
 
+        $rolId = (int)(Session::get('usuario')->id_rol ?? 0);
+
         // Obtener ubicaciones permitidas según el rol con permiso de lectura
-        $ubicacionesPermitidas = VistaPermisosRolEmpresaUbicacion::where('rol_id', Session::get('usuario')->id_rol)
-            ->where('puede_leer_ubicacion', true)
-            ->pluck('ubicacion_id')
-            ->toArray();
+        if (esSuperAdmin() || esAdmin() || $rolId === 3) {
+            $ubicacionesPermitidas = \App\Models\Ubicacion::pluck('id')->toArray();
+        } else {
+            try {
+                $ubicacionesPermitidas = VistaPermisosRolEmpresaUbicacion::where('rol_id', $rolId)
+                    ->where('puede_leer_ubicacion', true)
+                    ->pluck('ubicacion_id')
+                    ->toArray();
+            } catch (\Throwable $e) {
+                $ubicacionesPermitidas = [];
+            }
+            if (empty($ubicacionesPermitidas)) {
+                $ubicacionesPermitidas = \App\Models\Ubicacion::pluck('id')->toArray();
+            }
+        }
 
         $query = DB::table('productos')
             ->join('productos_consumibles', 'productos_consumibles.producto_id', '=', 'productos.id')
             ->leftJoin('ubicacion', 'productos.ubicacion_id', '=', 'ubicacion.id')
-            ->leftJoin('empresa', 'productos.empresa_id', '=', 'empresa.id')
+            ->leftJoin('empresa', 'ubicacion.empresa_id', '=', 'empresa.id')
             ->select(
                 'productos.id as id_producto',
                 'productos_consumibles.id as id',
                 'productos.nombre as nombre',
                 'productos.precio as precio',
-                'productos.empresa_id as empresa_id',
+                'ubicacion.empresa_id as empresa_id',
                 'empresa.nombre as empresa_nombre',
                 'productos_consumibles.existencia as existencia',
                 'ubicacion.nombre as ubicacion',
                 DB::raw("IF(productos_consumibles.existencia > 0, 'activo', 'agotado') as estado"),
                 'productos.fecha_registro as fechaEntrada',
                 DB::raw("'consumible' as tipo_producto")
-            )
-            ->whereIn('productos.ubicacion_id', $ubicacionesPermitidas);
+            );
+
+        if (!esSuperAdmin()) {
+            $query->whereIn('productos.ubicacion_id', $ubicacionesPermitidas);
+        }
 
         // Filtros básicos
         if ($request->filled('nombre')) {
@@ -118,10 +134,20 @@ class ConsumibleController extends Controller
 
         $usuarios = Usuario::where('estado', 'activo')->orderBy('nombre')->get();
 
-        $ubicaciones = VistaPermisosRolEmpresaUbicacion::with('ubicacion')
-            ->where('rol_id', Session::get('usuario')->id_rol)
-            ->where('puede_insertar_ubicacion', true)
-            ->get();
+        try {
+            $ubicaciones = VistaPermisosRolEmpresaUbicacion::with('ubicacion')
+                ->where('rol_id', $rolId)
+                ->where('puede_insertar_ubicacion', true)
+                ->get();
+        } catch (\Throwable $e) {
+            $ubicaciones = collect();
+        }
+
+        if ($ubicaciones->isEmpty() && (esSuperAdmin() || esAdmin() || $rolId === 3)) {
+            $ubicaciones = \App\Models\Ubicacion::where('estado', 'activo')->get()->map(function($u) {
+                return (object)['ubicacion_id' => $u->id, 'ubicacion' => $u];
+            });
+        }
 
         $empresasInternas = Empresa::where('status', 'interna')->orderBy('nombre')->get();
 
@@ -187,7 +213,7 @@ class ConsumibleController extends Controller
             throw $e;
         } catch (\Exception $e) {
             Log::error('Error al insertar producto consumible: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Ocurrió un error al insertar el producto consumible: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Ocurrió un error al insertar el producto consumible. Verifica los datos e intenta nuevamente.');
         }
     }
 
@@ -210,10 +236,20 @@ class ConsumibleController extends Controller
                 ->with('usuario')
                 ->orderByDesc('fecha')
                 ->get();
-            $ubicaciones = VistaPermisosRolEmpresaUbicacion::with('ubicacion')
-                ->where('rol_id', Session::get('usuario')->id_rol)
-                ->where('puede_leer_ubicacion', true)
-                ->get();
+            try {
+                $ubicaciones = VistaPermisosRolEmpresaUbicacion::with('ubicacion')
+                    ->where('rol_id', Session::get('usuario')->id_rol)
+                    ->where('puede_leer_ubicacion', true)
+                    ->get();
+            } catch (\Throwable $e) {
+                $ubicaciones = collect();
+            }
+
+            if ($ubicaciones->isEmpty() && (esSuperAdmin() || esAdmin() || (int)(Session::get('usuario')->id_rol ?? 0) === 3)) {
+                $ubicaciones = \App\Models\Ubicacion::where('estado', 'activo')->get()->map(function($u) {
+                    return (object)['ubicacion_id' => $u->id, 'ubicacion' => $u, 'puede_leer_ubicacion' => true];
+                });
+            }
             $todasLasEtiquetas = Etiqueta::where('eliminado', 1)->orderBy('nombre')->get();
             $todasLasNotificaciones = NotificacionConsumible::where('id_productos_consumibles', $id)->get();
 

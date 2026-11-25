@@ -5,33 +5,45 @@ $etiquetasUnicas = \App\Models\Etiqueta::obtenerEtiquetasActivas();
 ?>
 @section('content')
 <div class="container main-content animate__animated animate__fadeIn">
-    <div class="d-flex justify-content-between align-items-center mb-5">
+    <div class="sgi-page-header d-flex flex-column flex-md-row justify-content-between align-items-stretch align-items-md-center gap-3 mb-4 mb-md-5">
         <div>
             <h1 class="display-5 fw-bold text-gradient mb-2">
                 <i class="fas fa-boxes me-2"></i>Productos Consumibles
             </h1>
-            <p class="lead text-muted">
+            <p class="lead text-muted mb-0">
                 <i class="fas fa-info-circle me-2"></i>Inventario de productos de consumo interno
             </p>
         </div>
-        <div class="d-flex align-items-center">
-            @if(tienePermiso('consumible - insertar'))
-            <div class="d-flex gap-2">
-                <button id="btnInsertar" type="button" class="btn btn-primary btn-float"
-                    data-bs-toggle="modal" data-bs-target="#insertarProductoConsumibleModal">
-                    <i class="fas fa-plus-circle me-2"></i> Nuevo Producto
-                </button>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#importModal">
-                    Importar Productos
-                </button>
-                <a href="{{ route('plantilla.consumibles') }}" class="btn btn-primary">
-                    Descargar Plantilla – Consumibles
-                </a>
-            </div>
-            @endif
-            <span class="badge bg-primary bg-opacity-10 text-primary fs-6 me-3" id="badge-total-consumibles">
+        <div class="sgi-header-actions d-flex flex-wrap align-items-center gap-2">
+            <span class="badge bg-primary bg-opacity-10 text-primary fs-6" id="badge-total-consumibles">
                 <i class="fas fa-cubes me-1"></i> Total: {{ $productosConsumibles->total() }}
             </span>
+            @if(tienePermiso('consumible - insertar'))
+            <button id="btnInsertar" type="button" class="btn btn-primary btn-float"
+                data-bs-toggle="modal" data-bs-target="#insertarProductoConsumibleModal">
+                <i class="fas fa-plus-circle me-1"></i> Nuevo Producto
+            </button>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#importModal">
+                <i class="fas fa-file-import me-1"></i> Importar
+            </button>
+            <div class="btn-group">
+                <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-file-excel me-1"></i> Plantilla Consumibles
+                </button>
+                <ul class="dropdown-menu shadow dropdown-menu-end">
+                    <li>
+                        <a class="dropdown-item" href="{{ route('plantilla.consumibles') }}">
+                            <i class="fas fa-file-excel text-success me-2"></i> Plantilla Estándar (Vacía)
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="{{ route('plantilla.consumibles.codigos') }}">
+                            <i class="fas fa-barcode text-primary me-2"></i> Con 200 Códigos Prellenados
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            @endif
         </div>
     </div>
 
@@ -75,7 +87,7 @@ $etiquetasUnicas = \App\Models\Etiqueta::obtenerEtiquetasActivas();
                     </div>
                     @endif
 
-                    <table class="table table-hover align-middle mb-0">
+                    <table class="table table-hover align-middle mb-0 sgi-mobile-cards">
                         <thead class="table-light">
                             <tr>
                                 <th class="ps-4" style="width: 60px;">#</th>
@@ -87,7 +99,7 @@ $etiquetasUnicas = \App\Models\Etiqueta::obtenerEtiquetasActivas();
                                 <th>Fecha Registro</th>
                                 <th class="pe-4 text-end">Acciones</th>
                             </tr>
-                            <tr>
+                            <tr class="sgi-filter-row">
                                 <th></th>
                                 <th><input type="text" name="nombre" class="form-control form-control-sm filtro-api-consumible-text" placeholder="Buscar nombre..." value="{{ request('nombre') }}"></th>
                                 <th><input type="text" name="empresa" class="form-control form-control-sm filtro-api-consumible-text" placeholder="Buscar empresa..." value="{{ request('empresa') }}"></th>
@@ -102,7 +114,7 @@ $etiquetasUnicas = \App\Models\Etiqueta::obtenerEtiquetasActivas();
                                     </select>
                                 </th>
                                 <th><input type="date" name="fecha_registro" class="form-control form-control-sm filtro-api-consumible" value="{{ request('fecha_registro') }}" style="min-width: 130px;"></th>
-                                <th><button type="button" class="btn btn-sm btn-primary" onclick="fetchConsumibles()"><i class="fas fa-search"></i></button></th>
+                                <th><button type="button" class="btn btn-sm btn-primary" onclick="fetchConsumibles()"><i class="fas fa-search"></i><span class="d-md-none ms-1">Buscar</span></button></th>
                             </tr>
                         </thead>
                         <tbody id="tbody-consumibles">
@@ -120,7 +132,7 @@ $etiquetasUnicas = \App\Models\Etiqueta::obtenerEtiquetasActivas();
     </div>
 
     <!-- Paginación Asíncrona API Consumibles -->
-    <div class="d-flex justify-content-between align-items-center mt-4" id="contenedor-paginacion-consumibles">
+    <div class="sgi-pagination-bar d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 mt-4" id="contenedor-paginacion-consumibles">
         <div class="text-muted" id="info-paginacion-consumibles">
             Mostrando {{ $productosConsumibles->firstItem() ?? 0 }} a {{ $productosConsumibles->lastItem() ?? 0 }} de {{ $productosConsumibles->total() ?? 0 }} registros
         </div>
@@ -267,22 +279,22 @@ function renderTablaConsumibles(data, meta) {
 
         html += `
             <tr class="hover-scale">
-                <td class="ps-4 text-muted">${num}</td>
-                <td><strong>${escapeHtmlConsumible(p.nombre || 'Sin nombre')}</strong></td>
-                <td>
+                <td class="ps-4 text-muted" data-label="#">${num}</td>
+                <td data-label="Nombre"><strong>${escapeHtmlConsumible(p.nombre || 'Sin nombre')}</strong></td>
+                <td data-label="Empresa">
                     <span class="badge bg-light text-dark border">
                         <i class="fas fa-building me-1 text-primary"></i> ${escapeHtmlConsumible(p.empresa_nombre || 'Sin empresa')}
                     </span>
                 </td>
-                <td>
+                <td data-label="Ubicación">
                     <span class="badge bg-info bg-opacity-10 text-info">
                         <i class="fas fa-map-marker-alt me-1"></i> ${escapeHtmlConsumible(p.ubicacion || 'Sin ubicación')}
                     </span>
                 </td>
-                <td>${existenciaHtml}</td>
-                <td>${estadoHtml}</td>
-                <td><span class="text-muted">${fecha}</span></td>
-                <td class="pe-4 text-end">
+                <td data-label="Existencia">${existenciaHtml}</td>
+                <td data-label="Estado">${estadoHtml}</td>
+                <td data-label="Fecha Registro"><span class="text-muted">${fecha}</span></td>
+                <td class="pe-4 text-end" data-label="Acciones">
                     <div class="d-flex justify-content-end gap-2">
                         <button type="button" class="btn btn-sm btn-outline-dark btn-float" 
                                 onclick="abrirModalImprimirEtiqueta('${escapeHtmlConsumible(p.nombre || '')}', '${escapeHtmlConsumible(p.codigoBarra || '')}', '${escapeHtmlConsumible(p.empresa_nombre || 'SGI')}', '', '${p.precio !== null && p.precio !== undefined ? '$' + Number(p.precio).toFixed(2) : 'N/A'}', '${escapeHtmlConsumible(p.ubicacion || '')}')" 

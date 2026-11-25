@@ -8,7 +8,7 @@
             <div class="modal-content border-0 shadow-lg">
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title fw-bold" id="modalEditarEtiquetaLabel">
-                        <i class="fas fa-edit me-2"></i>Editar Etiqueta
+                        <i class="fas fa-edit me-2"></i>Editar Categoría
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
@@ -20,7 +20,7 @@
                             <div class="form-floating mb-3">
                                 <input type="text" class="form-control" id="nombreEtiqueta_editar" name="nombre" placeholder=" " required maxlength="100">
                                 <label for="nombreEtiqueta_editar" class="text-muted">
-                                    <i class="fas fa-tag me-1"></i> Nombre de la etiqueta
+                                    <i class="fas fa-tag me-1"></i> Nombre de la categoría
                                 </label>
                                 <div class="form-text text-muted">
                                     <i class="fas fa-info-circle me-1"></i> Máximo 100 caracteres

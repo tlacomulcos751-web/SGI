@@ -21,6 +21,7 @@
             </div>
             <p class="opacity-75 mb-0">Detalles completos del vehículo</p>
         </div>
+        <div class="sgi-header-actions d-flex flex-wrap gap-2 w-100 w-md-auto">
             <a href="{{ route('vehiculos.generarVale', $vehiculo->id) }}" 
                class="btn btn-light btn-sm rounded-pill px-3 text-dark fw-semibold shadow-sm d-flex align-items-center"
                title="Descargar Vale de Salida en formato Word (.docx)">
@@ -35,23 +36,23 @@
             </a>
             @if(tienePermiso('vehiculo - modificar') && !$vehiculo->eliminado)
             <button type="button"
-                class="btn btn-primary"
+                class="btn btn-primary btn-sm rounded-pill px-3"
                 data-bs-toggle="modal"
                 data-bs-target="#modalAgregrarDocumentacion">
-                <i class="bi bi-pencil"></i> Agregar documentación
+                <i class="bi bi-pencil me-1"></i> Agregar documentación
             </button>
             <button type="button"
-                class="btn btn-primary"
+                class="btn btn-primary btn-sm rounded-pill px-3"
                 data-bs-toggle="modal"
                 data-bs-target="#modalAgregarMantenimiento">
-                <i class="fas fa-tools me-2"></i> Agregar Mantenimiento
+                <i class="fas fa-tools me-1"></i> Agregar Mantenimiento
             </button>
             @endif
 
             @if(esSuperAdmin())
                 @if(!$vehiculo->eliminado)
                 <button type="button"
-                    class="btn btn-danger btn-eliminar rounded-pill px-3 shadow-sm"
+                    class="btn btn-danger btn-sm btn-eliminar rounded-pill px-3 shadow-sm"
                     data-bs-toggle="modal"
                     data-bs-target="#modalConfirmarEliminacion">
                     <i class="fas fa-ban me-1"></i> Dar de Baja Vehículo
@@ -60,7 +61,7 @@
                 <form action="{{ route('vehiculos.reactivar', $vehiculo->id) }}" method="POST" class="d-inline">
                     @csrf
                     @method('PUT')
-                    <button type="submit" class="btn btn-success rounded-pill px-3 shadow-sm text-white" onclick="return confirm('¿Deseas reactivar este vehículo a estado activo?');">
+                    <button type="submit" class="btn btn-success btn-sm rounded-pill px-3 shadow-sm text-white" onclick="return confirm('¿Deseas reactivar este vehículo a estado activo?');">
                         <i class="fas fa-check-circle me-1"></i> Reactivar Vehículo
                     </button>
                 </form>
@@ -82,7 +83,7 @@
     <div class="card-body p-0">
         <div class="row g-0">
             <!-- Left Column -->
-            <div class="col-lg-6 p-4 border-end">
+            <div class="col-lg-6 p-3 p-md-4 border-bottom border-lg-bottom-0 border-lg-end">
                 <div class="mb-4">
                     <h6 class="text-uppercase text-muted small fw-bold mb-3">Datos básicos</h6>
                     <div class="row g-3">

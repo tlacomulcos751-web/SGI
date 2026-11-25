@@ -76,7 +76,7 @@ class ResponsivaController extends Controller
             return view('responsivas.imprimir', $datos);
         } catch (\Exception $e) {
             Log::error('Error al generar responsiva de activo fijo #' . $id . ': ' . $e->getMessage());
-            return back()->with('error', 'Error al generar la carta responsiva: ' . $e->getMessage());
+            return back()->with('error', 'Ocurrió un error al generar la carta responsiva. Intenta nuevamente.');
         }
     }
 
@@ -126,7 +126,7 @@ class ResponsivaController extends Controller
             return view('responsivas.imprimir', $datos);
         } catch (\Exception $e) {
             Log::error('Error al generar responsiva de vehículo #' . $id . ': ' . $e->getMessage());
-            return back()->with('error', 'Error al generar la carta responsiva de vehículo: ' . $e->getMessage());
+            return back()->with('error', 'Ocurrió un error al generar la carta responsiva de vehículo. Intenta nuevamente.');
         }
     }
 
@@ -235,7 +235,7 @@ class ResponsivaController extends Controller
             return view('responsivas.imprimir', $datos);
         } catch (\Exception $e) {
             Log::error('Error al generar responsiva consolidada para el usuario #' . $id . ': ' . $e->getMessage());
-            return back()->with('error', 'Error al generar la carta responsiva: ' . $e->getMessage());
+            return back()->with('error', 'Ocurrió un error al generar la carta responsiva. Intenta nuevamente.');
         }
     }
 

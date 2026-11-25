@@ -7,8 +7,8 @@ use App\Models\VistaProductosUnificada;
 @section('content')
 <div class="container main-content animate__animated animate__fadeIn">
     <!-- Header with gradient and glass effect -->
-    <div class="glass-nav rounded-4 p-4 mb-5 shadow-sm">
-        <div class="d-flex justify-content-between align-items-center">
+    <div class="glass-nav rounded-4 p-3 p-md-4 mb-4 mb-md-5 shadow-sm">
+        <div class="sgi-page-header d-flex flex-column flex-md-row justify-content-between align-items-stretch align-items-md-center gap-3">
             <div>
                 <h1 class="display-5 fw-bold text-gradient mb-2">
                     <i class="fas fa-map-marker-alt me-2"></i> Ubicaciones
@@ -16,9 +16,11 @@ use App\Models\VistaProductosUnificada;
                 <p class="lead text-muted mb-0">Administra y visualiza todas las ubicaciones disponibles en el sistema</p>
             </div>
             @if (tienePermiso('agregarUbicaciones'))
-            <button type="button" class="btn btn-primary btn-lg btn-float shadow" data-bs-toggle="modal" data-bs-target="#modalInsertarUbicacion">
-                <i class="fas fa-plus-circle me-2"></i> Nueva Ubicación
-            </button>
+            <div class="sgi-header-actions">
+                <button type="button" class="btn btn-primary btn-lg btn-float shadow" data-bs-toggle="modal" data-bs-target="#modalInsertarUbicacion">
+                    <i class="fas fa-plus-circle me-2"></i> Nueva Ubicación
+                </button>
+            </div>
             @endif
         </div>
     </div>
@@ -32,7 +34,7 @@ use App\Models\VistaProductosUnificada;
     <div class="card border-0 shadow-lg overflow-hidden">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+                <table class="table table-hover align-middle mb-0 sgi-mobile-cards">
                     <thead class="table-light">
                         <tr>
                             <th class="ps-4 py-3 text-uppercase fw-500">#</th>
@@ -47,19 +49,19 @@ use App\Models\VistaProductosUnificada;
                     <tbody id="ubicaciones-tbody">
                         @foreach ($ubicaciones as $index => $ubicacion)
                         <tr class="hover-scale">
-                            <td class="ps-4 fw-bold">{{ $index + 1 }}</td>
-                            <td>
+                            <td class="ps-4 fw-bold" data-label="#">{{ $index + 1 }}</td>
+                            <td data-label="Clave">
                                 <span class="badge bg-primary bg-opacity-10 text-primary">
                                     {{ $ubicacion->clave }}
                                 </span>
                             </td>
-                            <td class="fw-semibold">{{ $ubicacion->nombre }}</td>
-                            <td>
+                            <td class="fw-semibold" data-label="Nombre">{{ $ubicacion->nombre }}</td>
+                            <td data-label="Estado">
                                 <span class="badge bg-{{ $ubicacion->estado == 'Activo' ? 'success' : 'secondary' }}">
                                     {{ $ubicacion->estado }}
                                 </span>
                             </td>
-                            <td>
+                            <td data-label="Empresa">
                                 @if($ubicacion->empresa)
                                 <span class="d-flex align-items-center">
                                     <i class="fas fa-building me-2 text-muted"></i>
@@ -69,17 +71,17 @@ use App\Models\VistaProductosUnificada;
                                 <span class="text-muted">N/A</span>
                                 @endif
                             </td>
-                            <td>
+                            <td data-label="No. de productos">
                                 <span class="badge bg-info bg-opacity-10 text-info">
                                     <i class="fas fa-cubes me-1"></i> {{ VistaProductosUnificada::contarPorUbicacion($ubicacion->id) }}
                                 </span>
                             </td>
-                            <td class="pe-4 text-end">
+                            <td class="pe-4 text-end" data-label="Acciones">
                                 <div class="btn-group btn-group-sm" role="group">
                                     <a href="{{ url('empresa/ubicaciones/' . $ubicacion->id) }}" class="btn btn-outline-primary btn-float rounded-start" data-bs-toggle="tooltip" title="Ver detalle">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    @if (tienePermiso('modificarUbicaciones') || tienePermiso('actualizar' . $ubicacion->nombre))
+                                    @if (tienePermiso('modificarUbicaciones') || tienePermiso($ubicacion->nombre . ' - modificar'))
                                     <button
                                         class="btn btn-sm btn-warning"
                                         data-bs-toggle="modal"

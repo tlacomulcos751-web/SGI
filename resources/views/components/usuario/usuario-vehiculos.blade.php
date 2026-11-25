@@ -7,7 +7,7 @@
 
 <div id="usuario-vehiculos-wrapper" class="mb-4">
     <div class="card border-0 shadow-lg overflow-hidden">
-        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+        <div class="card-header bg-white py-3 border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
             <div>
                 <h5 class="mb-0 fw-semibold text-primary">
                     <i class="fas fa-car me-2"></i>{{ $titulo }}
@@ -22,19 +22,19 @@
             @if($vehiculos->count() > 0)
             <div class="list-group list-group-flush">
                 @foreach($vehiculos as $vehiculo)
-                <div class="list-group-item border-0 py-3 px-4 hover-bg-light transition-all">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="icon-circle bg-primary bg-opacity-10 text-primary">
+                <div class="list-group-item border-0 py-3 px-3 px-md-4 hover-bg-light transition-all">
+                    <div class="d-flex flex-wrap align-items-center gap-2 gap-md-3">
+                        <div class="icon-circle bg-primary bg-opacity-10 text-primary flex-shrink-0">
                             <i class="fas fa-car"></i>
                         </div>
-                        <div class="flex-grow-1">
+                        <div class="flex-grow-1 min-w-0">
                             <a href="{{ $rutaDetalle($vehiculo) }}"
                                 class="text-decoration-none text-dark hover-text-primary">
-                                <h6 class="mb-1 fw-semibold">
+                                <h6 class="mb-1 fw-semibold text-truncate">
                                     {{ $vehiculo->marca }} {{ $vehiculo->modelo }} - {{ $vehiculo->placas }}
                                 </h6>
                             </a>
-                            <div class="d-flex align-items-center gap-2">
+                            <div class="d-flex flex-wrap align-items-center gap-2">
                                 <span class="text-muted small">
                                     <i class="fas fa-map-marker-alt me-1"></i>
                                     {{ $vehiculo->ubicacion->nombre ?? 'Sin ubicación' }}

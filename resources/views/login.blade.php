@@ -79,8 +79,9 @@
         /* Layout Dividido (Split Screen) */
         .split-layout {
             display: flex;
-            width: 100vw;
+            width: 100%;
             min-height: 100vh;
+            min-height: 100dvh;
         }
 
         /* Lado Izquierdo: Branding */
@@ -315,15 +316,40 @@
                 display: none;
             }
             .split-right {
-                padding: 24px;
+                justify-content: flex-start;
+                padding: 68px 16px 32px;
+                min-height: 100dvh;
             }
-            
+            .form-container {
+                margin: auto;
+            }
+            .theme-toggle-wrapper {
+                top: 16px;
+                right: 16px;
+            }
+            .login-header {
+                margin-bottom: 24px;
+            }
+            .login-header h2 {
+                font-size: 1.65rem;
+            }
+            .form-control-custom {
+                font-size: 16px;
+                min-height: 48px;
+            }
+            .btn-submit {
+                min-height: 48px;
+            }
             .mobile-logo {
-                display: block !important;
-                margin-bottom: 32px;
+                display: inline-block !important;
+                margin-bottom: 20px;
+                border-radius: 12px;
+                overflow: hidden;
             }
             .mobile-logo img {
-                height: 56px;
+                height: 52px;
+                width: auto;
+                display: block;
                 border-radius: 12px;
             }
         }
@@ -331,6 +357,9 @@
         .mobile-logo {
             display: none;
             position: relative;
+        }
+        .mobile-logo .logo-color-overlay {
+            border-radius: inherit;
         }
     </style>
 </head>
@@ -380,14 +409,14 @@
                 <form action="{{ route('login.post') }}" method="POST">
                     @csrf
                     <div class="form-group">
-                        <label class="form-label" for="email">Correo electrónico</label>
-                        <input type="email" name="email" id="email" class="form-control-custom" placeholder="ejemplo@nodo.com" required autofocus>
+                        <label class="form-label" for="login">Usuario o Correo electrónico</label>
+                        <input type="text" name="login" id="login" class="form-control-custom" placeholder="Usuario o correo" value="{{ old('login', old('email')) }}" required autofocus autocomplete="username">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label" for="password">Contraseña</label>
                         <div class="password-wrapper">
-                            <input type="password" name="password" id="password" class="form-control-custom" placeholder="••••••••" required>
+                            <input type="password" name="password" id="password" class="form-control-custom" placeholder="••••••••" required autocomplete="current-password">
                             <button type="button" class="toggle-password" onclick="togglePassword()" tabindex="-1" title="Mostrar/Ocultar contraseña">
                                 <i id="toggleIcon" class="fas fa-eye"></i>
                             </button>

@@ -4,28 +4,28 @@
 
 <div class="container main-content animate__animated animate__fadeIn">
     <!-- Header Section -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="sgi-page-header d-flex flex-column flex-md-row justify-content-between align-items-stretch align-items-md-center gap-3 mb-4">
         <div>
             <h1 class="display-5 fw-bold text-gradient mb-2">
                 <i class="fas fa-boxes me-2"></i>Nuestros Productos
             </h1>
-            <p class="lead text-muted">
+            <p class="lead text-muted mb-0">
                 <i class="fas fa-info-circle me-2"></i>Gestión completa del inventario de productos
             </p>
         </div>
-        <div class="d-flex align-items-center">
-            <span class="badge bg-primary bg-opacity-10 text-primary fs-6 me-3" id="badge-total-existencias">
+        <div class="sgi-header-actions d-flex flex-wrap align-items-center gap-2">
+            <span class="badge bg-primary bg-opacity-10 text-primary fs-6" id="badge-total-existencias">
                 <i class="fas fa-cubes me-1"></i> Total: {{ $totalExistencias ?? 0 }}
             </span>
             <a href="{{ route('productos.imprimir_por_responsable', request()->all()) }}" target="_blank" class="btn btn-outline-secondary shadow-sm">
-                <i class="fas fa-print me-2"></i>Imprimir Reporte
+                <i class="fas fa-print me-1"></i>Imprimir Reporte
             </a>
             @if(request('responsable_id'))
-                <form action="{{ route('imprimirGeneralResponsable') }}" method="POST" target="_blank" class="ms-2 mb-0">
+                <form action="{{ route('imprimirGeneralResponsable') }}" method="POST" target="_blank" class="m-0">
                     @csrf
                     <input type="hidden" name="responsable_id" value="{{ request('responsable_id') }}">
                     <button type="submit" class="btn btn-success shadow-sm">
-                        <i class="fas fa-file-excel me-2"></i> Imprimir Reporte del Responsable
+                        <i class="fas fa-file-excel me-1"></i> Reporte del Responsable
                     </button>
                 </form>
             @endif
@@ -67,7 +67,7 @@
                     </div>
                     @endif
 
-                    <table class="table table-hover align-middle" id="tabla-productos">
+                    <table class="table table-hover align-middle sgi-mobile-cards" id="tabla-productos">
                         <thead class="table-light">
                             <tr>
                                 <th class="ps-4" style="width: 60px;">#</th>
@@ -81,7 +81,7 @@
                                 <th>Tipo</th>
                                 <th class="pe-4 text-end">Acciones</th>
                             </tr>
-                            <tr>
+                            <tr class="sgi-filter-row">
                                 <th></th>
                                 <th>
                                     <input type="text" 
@@ -168,7 +168,7 @@
     </div>
 
     <!-- Paginación Asíncrona API -->
-    <div class="d-flex justify-content-between align-items-center mt-4" id="contenedor-paginacion">
+    <div class="sgi-pagination-bar d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 mt-4" id="contenedor-paginacion">
         <div class="text-muted" id="info-paginacion">
             Mostrando {{ $productos->firstItem() ?? 0 }} a {{ $productos->lastItem() ?? 0 }} de {{ $productos->total() ?? 0 }} registros
         </div>
@@ -283,10 +283,10 @@ function renderTablaProductos(data, meta) {
 
         html += `
             <tr class="hover-scale">
-                <td class="ps-4 text-muted">${num}</td>
-                <td>
+                <td class="ps-4 text-muted" data-label="#">${num}</td>
+                <td data-label="Producto">
                     <div class="d-flex align-items-center">
-                        <div class="bg-primary bg-opacity-10 p-2 rounded me-3">
+                        <div class="bg-primary bg-opacity-10 p-2 rounded me-2 d-none d-md-block">
                             <i class="fas fa-box text-primary"></i>
                         </div>
                         <div>
@@ -294,38 +294,38 @@ function renderTablaProductos(data, meta) {
                         </div>
                     </div>
                 </td>
-                <td class="text-end">${precioHtml}</td>
-                <td class="text-center">
+                <td class="text-end" data-label="Precio">${precioHtml}</td>
+                <td class="text-center" data-label="Existencia">
                     <span class="badge rounded-pill bg-${badgeExistencia} bg-opacity-10 text-${badgeExistencia}">
                         ${p.existencia || 0}
                     </span>
                 </td>
-                <td class="text-center">
+                <td class="text-center" data-label="Ubicación">
                     <span class="badge rounded-pill bg-info bg-opacity-10 text-info">
                         ${escapeHtml(p.ubicacion_nombre || 'Sin ubicación')}
                     </span>
                 </td>
-                <td class="text-center">
+                <td class="text-center" data-label="Empresa">
                     <span class="badge rounded-pill bg-secondary bg-opacity-10 text-secondary">
                         ${escapeHtml(p.empresa_nombre || 'Sin empresa')}
                     </span>
                 </td>
-                <td class="text-center">
+                <td class="text-center" data-label="Responsable">
                     <span class="badge rounded-pill bg-dark bg-opacity-10 text-dark d-block">
-                        ${escapeHtml(p.responsable_nombre || '')}
+                        ${escapeHtml(p.responsable_nombre || 'Sin asignar')}
                     </span>
                 </td>
-                <td class="text-center">
+                <td class="text-center" data-label="Estado">
                     <span class="badge rounded-pill bg-${estadoBadge} bg-opacity-10 text-${estadoBadge}">
                         ${capitalize(p.estado || 'desconocido')}
                     </span>
                 </td>
-                <td class="text-center">
+                <td class="text-center" data-label="Tipo">
                     <span class="badge bg-info bg-opacity-10 text-info">
                         ${capitalize(p.tipo || 'desconocido')}
                     </span>
                 </td>
-                <td class="pe-4 text-end">
+                <td class="pe-4 text-end" data-label="Acciones">
                     <button type="button" class="btn btn-sm btn-outline-dark btn-float" 
                             onclick="abrirModalImprimirEtiqueta('${escapeHtml(p.nombre || '')}', '${escapeHtml(p.codigoBarra || '')}', '${escapeHtml(p.empresa_nombre || 'SGI')}', '', '${p.precio !== null && p.precio !== '' && !isNaN(p.precio) ? '$' + parseFloat(p.precio).toFixed(2) : 'N/A'}', '${escapeHtml(p.ubicacion_nombre || '')}')" 
                             data-bs-toggle="tooltip" title="Imprimir Etiqueta con Código de Barras">

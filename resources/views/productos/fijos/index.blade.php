@@ -6,49 +6,61 @@ $etiquetasUnicas = \App\Models\Etiqueta::obtenerEtiquetasActivas(); // Suponiend
 @section('content')
 <div class="container main-content animate__animated animate__fadeIn">
     <!-- Header Section -->
-    <div class="d-flex justify-content-between align-items-center mb-5">
+    <div class="sgi-page-header d-flex flex-column flex-md-row justify-content-between align-items-stretch align-items-md-center gap-3 mb-4 mb-md-5">
         <div>
             <h1 class="display-5 fw-bold text-gradient mb-2">
                 <i class="fas fa-archive me-2"></i>Activos Fijos
             </h1>
-            <p class="lead text-muted">
+            <p class="lead text-muted mb-0">
                 <i class="fas fa-info-circle me-2"></i>Inventario de bienes duraderos que permanecen en la organización
             </p>
         </div>
-        <div class="d-flex align-items-center">
-            @if(tienePermiso('fijos - insertar'))
-            <div class="d-flex gap-2">
-                <button id="btnInsertar" type="button" class="btn btn-primary btn-float"
-                    data-bs-toggle="modal" data-bs-target="#insertarProductoFijoModal">
-                    <i class="fas fa-plus-circle me-2"></i> Nuevo Producto
-                </button>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#importModal">
-                    Importar Productos
-                </button>
-                <a href="{{ route('plantilla.fijos') }}" class="btn btn-primary">
-                    Descargar Plantilla – Fijos
-                </a>
-            </div>
-            @endif
-            <span class="badge bg-primary bg-opacity-10 text-primary fs-6 me-3">
+        <div class="sgi-header-actions d-flex flex-wrap align-items-center gap-2">
+            <span class="badge bg-primary bg-opacity-10 text-primary fs-6">
                 <i class="fas fa-cubes me-1"></i> Total: {{ $productosFijos->total() }}
             </span>
+            @if(tienePermiso('fijos - insertar'))
+            <button id="btnInsertar" type="button" class="btn btn-primary btn-float"
+                data-bs-toggle="modal" data-bs-target="#insertarProductoFijoModal">
+                <i class="fas fa-plus-circle me-1"></i> Nuevo Producto
+            </button>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#importModal">
+                <i class="fas fa-file-import me-1"></i> Importar
+            </button>
+            <div class="btn-group">
+                <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-file-excel me-1"></i> Plantilla Fijos
+                </button>
+                <ul class="dropdown-menu shadow dropdown-menu-end">
+                    <li>
+                        <a class="dropdown-item" href="{{ route('plantilla.fijos') }}">
+                            <i class="fas fa-file-excel text-success me-2"></i> Plantilla Estándar (Vacía)
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="{{ route('plantilla.fijos.codigos') }}">
+                            <i class="fas fa-barcode text-primary me-2"></i> Con 200 Códigos Prellenados
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            @endif
         </div>
     </div>
     <!-- Productos Table -->
     <div class="card glass-nav border-0 shadow-sm overflow-hidden">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <div class="p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <form action="{{ route('imprimirFijos') }}" method="post" class="print-form">
+                <div class="p-3 p-md-4">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                        <form action="{{ route('imprimirFijos') }}" method="post" class="print-form m-0">
                             @csrf
                             <button type="submit" class="btn btn-outline-secondary btn-sm">
                                 <i class="fas fa-print"></i> Imprimir Reporte General
                             </button>
                         </form>
                         @if(request()->has('responsable_id') && request('responsable_id') != '')
-                            <form action="{{ route('imprimirFijosResponsable') }}" method="POST" target="_blank">
+                            <form action="{{ route('imprimirFijosResponsable') }}" method="POST" target="_blank" class="m-0">
                                 @csrf
                                 <input type="hidden" name="responsable_id" value="{{ request('responsable_id') }}">
                                 <button type="submit" class="btn btn-success btn-sm">
@@ -57,7 +69,7 @@ $etiquetasUnicas = \App\Models\Etiqueta::obtenerEtiquetasActivas(); // Suponiend
                             </form>
                         @endif
                     </div>
-                    <form id="form-filtros" method="GET" class="mb-3">
+                    <form id="form-filtros" method="GET" class="mb-2">
                         <div class="row g-3 align-items-end mb-3">
                             <div class="col-md-6">
                                 <label for="responsable_id" class="form-label"><strong>Filtrar por Responsable:</strong></label>
@@ -73,12 +85,12 @@ $etiquetasUnicas = \App\Models\Etiqueta::obtenerEtiquetasActivas(); // Suponiend
                         </div>
 
                         @if(!empty($etiquetasUnicas) && $etiquetasUnicas->count() > 0)
-                        <div class="mb-3">
-                            <strong class="me-2"><i class="fas fa-tags me-1"></i>Filtrar por categoría:</strong>
+                        <div class="mb-2 d-flex flex-wrap align-items-center gap-1">
+                            <strong class="me-2 w-100 w-md-auto mb-1 mb-md-0"><i class="fas fa-tags me-1"></i>Filtrar por categoría:</strong>
                             <input type="hidden" name="etiquetas[]" value="" />
                             @foreach($etiquetasUnicas as $etiqueta)
                             <input type="checkbox" class="btn-check" name="etiquetas[]" value="{{ strtolower($etiqueta->nombre) }}" id="etiquetas-{{ $etiqueta->id }}" {{ in_array(strtolower($etiqueta->nombre), (array)request('etiquetas')) ? 'checked' : '' }}>
-                            <label class="btn btn-sm btn-outline-primary me-2 mb-1" for="etiquetas-{{ $etiqueta->id }}">
+                            <label class="btn btn-sm btn-outline-primary me-1 mb-1" for="etiquetas-{{ $etiqueta->id }}">
                                 {{ $etiqueta->nombre }}
                             </label>
                             @endforeach
@@ -86,7 +98,7 @@ $etiquetasUnicas = \App\Models\Etiqueta::obtenerEtiquetasActivas(); // Suponiend
                         @endif
                     </form>
                 </div>
-                <table class="table table-hover align-middle mb-0">
+                <table class="table table-hover align-middle mb-0 sgi-mobile-cards">
                     <thead class="table-light">
                         <tr>
                             <th class="ps-4" style="width: 60px;">#</th>
@@ -98,11 +110,13 @@ $etiquetasUnicas = \App\Models\Etiqueta::obtenerEtiquetasActivas(); // Suponiend
                             <th>Fecha Entrada</th>
                             <th class="pe-4 text-end">Acciones</th>
                         </tr>
-                        <tr>
+                        <tr class="sgi-filter-row">
                             <th></th>
-                            <th class="d-flex align-items-center gap-1">
-                                <input type="text" class="form-control form-control-sm" form="form-filtros" name="clave" id="claveInput" placeholder="Buscar clave..." value="{{ request('clave') }}">
-                                <button type="button" class="btn btn-sm btn-secondary" onclick="scanQR()"><i class="fas fa-qrcode"></i></button>
+                            <th>
+                                <div class="d-flex align-items-center gap-1">
+                                    <input type="text" class="form-control form-control-sm" form="form-filtros" name="clave" id="claveInput" placeholder="Buscar clave..." value="{{ request('clave') }}">
+                                    <button type="button" class="btn btn-sm btn-secondary flex-shrink-0" onclick="scanQR()" title="Escanear QR"><i class="fas fa-qrcode"></i></button>
+                                </div>
                             </th>
                             <th><input type="text" class="form-control form-control-sm" form="form-filtros" name="nombre" placeholder="Buscar nombre..." value="{{ request('nombre') }}"></th>
                             <th><input type="text" class="form-control form-control-sm" form="form-filtros" name="empresa" placeholder="Buscar empresa..." value="{{ request('empresa') }}"></th>
@@ -110,7 +124,7 @@ $etiquetasUnicas = \App\Models\Etiqueta::obtenerEtiquetasActivas(); // Suponiend
                             <th><input type="text" class="form-control form-control-sm" form="form-filtros" name="estado" placeholder="Buscar estado..." value="{{ request('estado') }}"></th>
                             <th><input type="date" class="form-control form-control-sm" form="form-filtros" name="fechaEntrada" value="{{ request('fechaEntrada') }}" style="min-width: 130px;"></th>
                             <th class="text-end">
-                                <button type="submit" form="form-filtros" class="btn btn-sm btn-primary"><i class="fas fa-search"></i></button>
+                                <button type="submit" form="form-filtros" class="btn btn-sm btn-primary"><i class="fas fa-search me-1 d-md-none"></i><i class="fas fa-search d-none d-md-inline"></i><span class="d-md-none">Buscar</span></button>
                             </th>
                         </tr>
                         <tr id="scannerRow" style="display: none;">
@@ -292,30 +306,31 @@ function renderTablaFijos(data, meta) {
 
         html += `
             <tr class="hover-scale">
-                <td class="ps-4 text-muted">${num}</td>
-                <td>
+                <td class="ps-4 text-muted" data-label="#">${num}</td>
+                <td data-label="Clave">
                     <span class="badge bg-secondary bg-opacity-10 text-secondary font-monospace">
                         ${escapeHtmlFijo(p.clave || '')}
                     </span>
                 </td>
-                <td><strong>${escapeHtmlFijo(p.nombre || 'Sin nombre')}</strong></td>
-                <td>
+                <td data-label="Nombre"><strong>${escapeHtmlFijo(p.nombre || 'Sin nombre')}</strong></td>
+                <td data-label="Empresa">
                     <span class="badge bg-light text-dark border">
                         <i class="fas fa-building me-1 text-primary"></i> ${escapeHtmlFijo(p.empresa_nombre || 'Sin empresa')}
                     </span>
                 </td>
-                <td>
+                <td data-label="Ubicación">
                     <span class="badge bg-info bg-opacity-10 text-info">
                         <i class="fas fa-map-marker-alt me-1"></i> ${escapeHtmlFijo(p.ubicacion || 'Sin ubicación')}
                     </span>
                 </td>
-                <td>
+                <td data-label="Estado">
                     <span class="badge rounded-pill bg-${estadoBadge} bg-opacity-10 text-${estadoBadge}">
                         ${capitalizeFijo(p.estado || 'desconocido')}
                     </span>
                 </td>
-                <td><span class="text-muted">${fecha}</span></td>
-                <td class="pe-4 text-end">
+                <td data-label="Fecha Entrada"><span class="text-muted">${fecha}</span></td>
+                <td class="pe-4 text-end" data-label="Acciones">
+                    <div class="d-flex justify-content-end flex-wrap gap-1">
                         <a href="/productos-fijos/${p.id}/generar-vale" class="btn btn-sm btn-outline-primary btn-float" data-bs-toggle="tooltip" title="Generar Vale de Salida (Word)">
                             <i class="fas fa-file-word"></i>
                         </a>
@@ -348,7 +363,7 @@ function renderPaginacionFijos(meta) {
     const last = Math.min(meta.current_page * meta.per_page, meta.total);
 
     let html = `
-    <div class="d-flex justify-content-between align-items-center mt-4">
+    <div class="sgi-pagination-bar d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 mt-4">
         <div class="text-muted">
             Mostrando ${first} a ${last} de ${meta.total} registros
         </div>

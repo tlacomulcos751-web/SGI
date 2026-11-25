@@ -1,16 +1,15 @@
 <!-- Modal Insertar Producto Fijo -->
 <div class="modal fade" id="insertarProductoFijoModal" tabindex="-1" aria-labelledby="insertarProductoFijoModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <form method="POST" action="{{ route('productos_fijos.insertar') }}" enctype="multipart/form-data" id="formInsertarProductoFijo" class="needs-validation" novalidate>
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <form method="POST" action="{{ route('productos_fijos.insertar') }}" enctype="multipart/form-data" id="formInsertarProductoFijo" data-sgi-draft="true" class="modal-content border-0 shadow-lg needs-validation" novalidate>
             @csrf
-            <div class="modal-content border-0 shadow-lg">
-                <!-- Encabezado del Modal -->
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title fs-5" id="insertarProductoFijoModalLabel">
-                        <i class="fas fa-box-open me-2"></i>Insertar Producto Fijo
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
+            <!-- Encabezado del Modal -->
+            <div class="modal-header text-white" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);">
+                <h5 class="modal-title fs-5 text-white" id="insertarProductoFijoModalLabel">
+                    <i class="fas fa-box-open me-2"></i>Insertar Producto Fijo
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
 
                 <!-- Cuerpo del Modal -->
                 <div class="modal-body p-4">
@@ -142,6 +141,19 @@
                                                 @endforeach
                                             </select>
                                         </div>
+
+                                        <div class="col-12">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <label for="proyecto_insert_fijo" class="form-label mb-0 fw-medium">
+                                                    <i class="fas fa-project-diagram text-primary me-1"></i>Proyecto Asignado
+                                                </label>
+                                                <span class="badge bg-secondary bg-opacity-10 text-secondary border fw-normal" style="font-size: 0.72rem;">Opcional — Nodo PR</span>
+                                            </div>
+                                            <select class="form-select select-proyecto-nodo" name="proyecto" id="proyecto_insert_fijo">
+                                                <option value="">-- Sin proyecto asignado / General --</option>
+                                            </select>
+                                            <small class="text-muted" style="font-size: 0.75rem;">Proyecto activo de Nodo Group al que se vincula el activo.</small>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -225,7 +237,6 @@
                         <i class="fas fa-save me-2"></i>Guardar Producto
                     </button>
                 </div>
-            </div>
         </form>
     </div>
 </div>
@@ -342,4 +353,41 @@
             input.focus();
         }
     }
+
+    // Cargar proyectos de Nodo Group en el selector de activos fijos
+    let _proyectosFijosCargados = false;
+    async function cargarProyectosNodoFijos() {
+        if (_proyectosFijosCargados) return;
+        const sel = document.getElementById('proyecto_insert_fijo');
+        if (!sel) return;
+
+        try {
+            const res = await fetch("{{ route('api.proyectos.nodo') }}");
+            const data = await res.json();
+            if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+                _proyectosFijosCargados = true;
+                const valorActual = sel.value;
+                sel.innerHTML = '<option value="">-- Sin proyecto asignado / General --</option>';
+                data.data.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.valor;
+                    opt.textContent = p.label;
+                    if (p.valor === valorActual) opt.selected = true;
+                    sel.appendChild(opt);
+                });
+            }
+        } catch(err) {
+            console.warn('No se pudo cargar la lista de proyectos de Nodo:', err);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        cargarProyectosNodoFijos();
+        const modalFijo = document.getElementById('insertarProductoFijoModal');
+        if (modalFijo) {
+            modalFijo.addEventListener('show.bs.modal', function() {
+                if (!_proyectosFijosCargados) cargarProyectosNodoFijos();
+            });
+        }
+    });
 </script>

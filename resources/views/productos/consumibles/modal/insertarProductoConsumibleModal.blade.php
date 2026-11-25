@@ -1,40 +1,39 @@
 <!-- Modal Insertar Producto Consumible -->
 <div class="modal fade" id="insertarProductoConsumibleModal" tabindex="-1" aria-labelledby="insertarProductoConsumibleModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <form method="POST" action="{{ route('productos_consumibles.insertar') }}" enctype="multipart/form-data" id="formInsertarProductoConsumible" class="needs-validation" novalidate>
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <form method="POST" action="{{ route('productos_consumibles.insertar') }}" enctype="multipart/form-data" id="formInsertarProductoConsumible" data-sgi-draft="true" class="modal-content border-0 shadow-lg needs-validation" novalidate>
             @csrf
-            <div class="modal-content border-0 shadow-lg">
-                <!-- Encabezado -->
-                <div class="modal-header bg-warning text-white">
-                    <h5 class="modal-title fs-5" id="insertarProductoConsumibleModalLabel">
-                        <i class="fas fa-boxes me-2"></i>Insertar Producto Consumible
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
+            <!-- Encabezado -->
+            <div class="modal-header text-white" style="background: linear-gradient(135deg, #d97706 0%, #b45309 100%);">
+                <h5 class="modal-title fs-5 text-white" id="insertarProductoConsumibleModalLabel">
+                    <i class="fas fa-boxes me-2"></i>Insertar Producto Consumible
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
 
                 <!-- Cuerpo -->
                 <div class="modal-body p-4">
-                    <div class="row g-4">
-                        <!-- Información Básica -->
+                    <div class="row g-3">
+                        <!-- Columna Izquierda: Información Básica -->
                         <div class="col-lg-6">
                             <div class="card border-0 shadow-sm h-100">
                                 <div class="card-header bg-light">
-                                    <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Información Básica</h6>
+                                    <h6 class="mb-0"><i class="fas fa-info-circle me-2 text-primary"></i>Información Básica</h6>
                                 </div>
                                 <div class="card-body">
                                     <div class="mb-3">
-                                        <label for="nombre" class="form-label">Nombre <span class="text-danger">*</span></label>
+                                        <label for="nombre" class="form-label fw-medium">Nombre <span class="text-danger">*</span></label>
                                         <input type="text" name="nombre" id="nombre" class="form-control" maxlength="150" required placeholder="Nombre del producto">
                                     </div>
 
                                     <div class="mb-3">
-                                        <label for="descripcion" class="form-label">Descripción</label>
+                                        <label for="descripcion" class="form-label fw-medium">Descripción</label>
                                         <textarea name="descripcion" id="descripcion" rows="2" class="form-control" placeholder="Descripción opcional..."></textarea>
                                     </div>
 
                                     <div class="mb-3">
                                         <div class="d-flex justify-content-between align-items-center mb-1">
-                                            <label for="codigoBarra" class="form-label mb-0">Código de Barras</label>
+                                            <label for="codigoBarra" class="form-label mb-0 fw-medium">Código de Barras</label>
                                             <span class="text-muted small">Opcional / Autogenerable</span>
                                         </div>
                                         <div class="input-group">
@@ -51,7 +50,7 @@
                                     </div>
 
                                     <div class="mb-3">
-                                        <label for="empresa_id" class="form-label">Empresa Interna <span class="text-danger">*</span></label>
+                                        <label for="empresa_id" class="form-label fw-medium">Empresa Interna <span class="text-danger">*</span></label>
                                         <select class="form-select select2" name="empresa_id" id="empresa_id" required>
                                             <option value="" disabled selected>Seleccione la empresa interna...</option>
                                             @foreach($empresasInternas as $empresa)
@@ -61,8 +60,8 @@
                                         <div class="invalid-feedback">Por favor seleccione la empresa dueña del producto</div>
                                     </div>
 
-                                    <div class="mb-3">
-                                        <label for="ubicacion_id" class="form-label">Ubicación <span class="text-danger">*</span></label>
+                                    <div class="mb-0">
+                                        <label for="ubicacion_id" class="form-label fw-medium">Ubicación <span class="text-danger">*</span></label>
                                         <select class="form-select select2" name="ubicacion_id" id="ubicacion_id" required>
                                             @foreach($ubicaciones as $ubicacion)
                                             @if($ubicacion->puede_insertar_ubicacion)
@@ -75,67 +74,68 @@
                             </div>
                         </div>
 
-                        <!-- Detalles de Consumible -->
-                        <div class="col-lg-6">
-                            <div class="card border-0 shadow-sm h-100">
+                        <!-- Columna Derecha: Datos + Categorías + Comentario -->
+                        <div class="col-lg-6 d-flex flex-column gap-3">
+                            <!-- Datos de Consumible -->
+                            <div class="card border-0 shadow-sm">
                                 <div class="card-header bg-light">
-                                    <h6 class="mb-0"><i class="fas fa-box me-2"></i>Datos de Consumible</h6>
+                                    <h6 class="mb-0"><i class="fas fa-box me-2 text-primary"></i>Datos de Consumible</h6>
                                 </div>
                                 <div class="card-body">
-                                    <div class="mb-3">
-                                        <div class="d-flex justify-content-between align-items-center mb-1">
-                                            <label for="precio" class="form-label mb-0 fw-medium">Precio ($)</label>
-                                            <div class="form-check form-switch m-0 d-flex align-items-center gap-2">
-                                                <input class="form-check-input" type="checkbox" role="switch" id="no_aplica_precio_consumible" onchange="toggleNoAplicaPrecioConsumible(this, 'precio')" style="cursor: pointer; width: 2.2em; height: 1.1em;">
-                                                <label class="form-check-label small fw-semibold text-secondary user-select-none" for="no_aplica_precio_consumible" style="cursor: pointer;">No aplica (N.A.)</label>
+                                    <div class="row g-2">
+                                        <div class="col-sm-6 mb-2">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <label for="precio" class="form-label mb-0 fw-medium">Precio ($)</label>
+                                                <div class="form-check form-switch m-0 d-flex align-items-center gap-1">
+                                                    <input class="form-check-input" type="checkbox" role="switch" id="no_aplica_precio_consumible" onchange="toggleNoAplicaPrecioConsumible(this, 'precio')" style="cursor: pointer;">
+                                                    <label class="form-check-label small text-muted user-select-none" for="no_aplica_precio_consumible" style="cursor: pointer; font-size: 0.78rem;">N.A.</label>
+                                                </div>
+                                            </div>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light fw-bold" id="addon-precio-consumible">$</span>
+                                                <input type="number" name="precio" id="precio" class="form-control" step="0.01" min="0" max="999999.99" value="1.00" placeholder="0.00">
+                                            </div>
+                                            <div id="hint-na-precio-consumible" class="form-text text-muted small d-none">
+                                                <i class="fas fa-info-circle me-1 text-primary"></i>Sin costo asignado.
                                             </div>
                                         </div>
-                                        <div class="input-group">
-                                            <span class="input-group-text bg-light fw-bold" id="addon-precio-consumible">$</span>
-                                            <input type="number" name="precio" id="precio" class="form-control" step="0.01" min="0" max="999999.99" value="1.00" placeholder="0.00">
-                                        </div>
-                                        <div id="hint-na-precio-consumible" class="form-text text-muted small d-none">
-                                            <i class="fas fa-info-circle me-1 text-primary"></i>Este consumible se registrará sin costo asignado (N.A.).
-                                        </div>
-                                    </div>
 
-                                    <div class="mb-3">
-                                        <label for="existencia_real" class="form-label">Cantidad <span class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <select class="form-select" id="existencia_select" onchange="document.getElementById('existencia_real').value = this.value">
-                                                @for($i = 1; $i <= 50; $i++)
-                                                    <option value="{{ $i }}">{{ $i }}</option>
-                                                @endfor
-                                            </select>
-                                            <input type="number" class="form-control d-none" id="existencia_input" placeholder="Cantidad disponible" min="1" max="100000" step="1" oninput="document.getElementById('existencia_real').value = this.value">
-                                            <button type="button" class="btn btn-outline-secondary" id="btn_toggle_existencia" onclick="toggleExistenciaMode()" title="Escribir cantidad manual">
-                                                <i class="fas fa-keyboard"></i>
-                                            </button>
+                                        <div class="col-sm-6 mb-2">
+                                            <label for="existencia_real" class="form-label fw-medium">Cantidad <span class="text-danger">*</span></label>
+                                            <div class="input-group">
+                                                <select class="form-select" id="existencia_select" onchange="document.getElementById('existencia_real').value = this.value">
+                                                    @for($i = 1; $i <= 50; $i++)
+                                                        <option value="{{ $i }}">{{ $i }}</option>
+                                                    @endfor
+                                                </select>
+                                                <input type="number" class="form-control d-none" id="existencia_input" placeholder="Cantidad" min="1" max="100000" step="1" oninput="document.getElementById('existencia_real').value = this.value">
+                                                <button type="button" class="btn btn-outline-secondary" id="btn_toggle_existencia" onclick="toggleExistenciaMode()" title="Escribir cantidad manual">
+                                                    <i class="fas fa-keyboard"></i>
+                                                </button>
+                                            </div>
+                                            <!-- Input real que se envía en el POST -->
+                                            <input type="hidden" name="existencia" id="existencia_real" value="1">
                                         </div>
-                                        <!-- Input real que se envía en el POST -->
-                                        <input type="hidden" name="existencia" id="existencia_real" value="1">
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Etiquetas -->
-                        <div class="col-lg-6">
+                            <!-- Categorías -->
                             <div class="card border-0 shadow-sm">
-                                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
                                     <h6 class="mb-0"><i class="fas fa-tags me-2 text-primary"></i>Categorías</h6>
                                     @if(tienePermiso('insertarEtiquetas') || esSuperAdmin())
-                                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalInsertarEtiqueta">
-                                        <i class="fas fa-plus me-1"></i> Nueva Categoría
+                                    <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2" data-bs-toggle="modal" data-bs-target="#modalInsertarEtiqueta" style="font-size: 0.8rem;">
+                                        <i class="fas fa-plus me-1"></i> Nueva
                                     </button>
                                     @endif
                                 </div>
-                                <div class="card-body">
-                                    <div class="d-flex flex-wrap gap-2">
+                                <div class="card-body py-2">
+                                    <div class="d-flex flex-wrap gap-2" style="max-height: 120px; overflow-y: auto;">
                                         @foreach($etiquetasUnicas as $etiqueta)
-                                        <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="checkbox" name="etiquetasInsertar[]" value="{{ $etiqueta->id }}" id="etiqueta-{{ $etiqueta->id }}">
-                                            <label class="form-check-label badge bg-primary bg-opacity-10 text-primary p-2" for="etiqueta-{{ $etiqueta->id }}">
+                                        <div class="form-check form-check-inline m-0 d-flex align-items-center gap-1">
+                                            <input class="form-check-input" type="checkbox" name="etiquetasInsertar[]" value="{{ $etiqueta->id }}" id="etiqueta-{{ $etiqueta->id }}" style="cursor: pointer;">
+                                            <label class="form-check-label badge bg-primary bg-opacity-10 text-primary p-2 user-select-none" for="etiqueta-{{ $etiqueta->id }}" style="cursor: pointer;">
                                                 <i class="fas fa-tag me-1"></i>{{ $etiqueta->nombre }}
                                             </label>
                                         </div>
@@ -143,15 +143,13 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Comentario -->
-                        <div class="col-12">
+                            <!-- Comentario -->
                             <div class="card border-0 shadow-sm">
-                                <div class="card-header bg-light">
-                                    <h6 class="mb-0"><i class="fas fa-comment-dots me-2"></i>Comentario</h6>
+                                <div class="card-header bg-light py-2">
+                                    <h6 class="mb-0"><i class="fas fa-comment-dots me-2 text-primary"></i>Comentario</h6>
                                 </div>
-                                <div class="card-body">
+                                <div class="card-body py-2">
                                     <textarea name="comentario" id="comentario" rows="2" class="form-control" placeholder="Observaciones del ingreso..."></textarea>
                                 </div>
                             </div>
@@ -164,7 +162,6 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times me-2"></i>Cancelar</button>
                     <button type="submit" class="btn btn-primary"><i class="fas fa-save me-2"></i>Guardar Producto</button>
                 </div>
-            </div>
         </form>
     </div>
 </div>

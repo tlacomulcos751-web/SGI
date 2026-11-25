@@ -24,5 +24,21 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (\Illuminate\Database\QueryException|\PDOException $e, \Illuminate\Http\Request $request) {
+            \Illuminate\Support\Facades\Log::error('Error de base de datos: ' . $e->getMessage());
+
+            $safeMessage = 'Ocurrió un error interno al procesar la solicitud. Por favor, intenta nuevamente más tarde.';
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $safeMessage,
+                ], 500);
+            }
+
+            if (url()->previous() && url()->previous() !== $request->fullUrl()) {
+                return redirect()->back()->with('error', $safeMessage);
+            }
+
+            return response($safeMessage, 500);
+        });
     })->create();

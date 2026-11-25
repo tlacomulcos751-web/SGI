@@ -5,6 +5,7 @@ namespace App\Exports;
 use App\Models\Empresa;
 use App\Models\Ubicacion;
 use App\Models\Usuario;
+use App\Models\Producto;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithTitle;
@@ -14,11 +15,15 @@ use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use Illuminate\Support\Facades\Log;
 
 class PlantillasExport implements WithMultipleSheets
 {
     protected string $type;
+    protected bool $conCodigos;
+    protected int $cantidadCodigos;
+
     protected array $archivoMap = [
         'fijos' => 'activosfijos.xlsx',
         'vehiculos' => 'vehiculos.xlsx',
@@ -26,9 +31,11 @@ class PlantillasExport implements WithMultipleSheets
         'compraventa' => 'compra_venta.xlsx',
     ];
 
-    public function __construct(string $type = 'fijos')
+    public function __construct(string $type = 'fijos', bool $conCodigos = false, int $cantidadCodigos = 200)
     {
         $this->type = strtolower($type);
+        $this->conCodigos = $conCodigos;
+        $this->cantidadCodigos = $cantidadCodigos;
     }
 
     public function sheets(): array
@@ -59,6 +66,11 @@ class PlantillasExport implements WithMultipleSheets
             // Si falla, crear spreadsheet nuevo desde cero
             Log::info("Creando spreadsheet desde cero debido al error");
             $spreadsheet = $this->crearPlantillaDesdeReferencias();
+        }
+
+        // Si se solicitaron códigos prellenados dinámicos
+        if ($this->conCodigos) {
+            $this->rellenarCodigosBarraDinamicos($spreadsheet);
         }
 
         // Eliminar hoja "Referencias" si existe
@@ -195,6 +207,82 @@ $responsables = Usuario::orderBy('nombre')->get()->map(function ($u) {
             $hojaReferencias->getColumnDimension($col)->setAutoSize(true);
         }
         $hojaReferencias->freezePane('A2');
+    }
+
+    /**
+     * Rellena la hoja principal con códigos de barra EAN-13 únicos que no existan en la BD
+     */
+    protected function rellenarCodigosBarraDinamicos(Spreadsheet $spreadsheet): void
+    {
+        $sheet = $spreadsheet->getSheet(0);
+
+        // 1. Localizar columna de código de barra
+        $colCodigo = null;
+        $highestColumn = $sheet->getHighestColumn();
+        for ($col = 'A'; $col <= $highestColumn; $col++) {
+            $header = strtolower(trim((string)$sheet->getCell($col . '1')->getValue()));
+            if (in_array($header, ['codigo_de_barra', 'codigo_barra', 'codigo'])) {
+                $colCodigo = $col;
+                break;
+            }
+        }
+
+        if (!$colCodigo) {
+            return;
+        }
+
+        // 2. Limpiar filas de ejemplo existentes
+        $highestRow = $sheet->getHighestRow();
+        if ($highestRow >= 2) {
+            $sheet->removeRow(2, $highestRow - 1);
+        }
+
+        // 3. Generar códigos EAN-13 únicos que no existan en la base de datos
+        $codigos = $this->generarCodigosBarraUnicos($this->cantidadCodigos);
+
+        // 4. Escribir códigos en la columna correspondiente como cadenas de texto
+        foreach ($codigos as $idx => $codigo) {
+            $fila = $idx + 2;
+            $sheet->setCellValueExplicit($colCodigo . $fila, $codigo, DataType::TYPE_STRING);
+        }
+    }
+
+    /**
+     * Genera $cantidad de códigos EAN-13 válidos y únicos garantizados
+     */
+    protected function generarCodigosBarraUnicos(int $cantidad): array
+    {
+        $prefix = '20' . date('y'); // Prefijo de uso interno restringido GS1 (2026)
+        // Obtener códigos existentes en productos para evitar colisiones
+        $existentes = Producto::whereNotNull('codigoBarra')
+            ->pluck('codigoBarra')
+            ->flip()
+            ->all();
+
+        $codigos = [];
+        $intentos = 0;
+        $maxIntentos = $cantidad * 50;
+
+        while (count($codigos) < $cantidad && $intentos < $maxIntentos) {
+            $intentos++;
+            $randomDigits = str_pad((string)mt_rand(0, 99999999), 8, '0', STR_PAD_LEFT);
+            $base12 = $prefix . $randomDigits;
+
+            // Calcular dígito verificador EAN-13
+            $sum = 0;
+            for ($i = 0; $i < 12; $i++) {
+                $weight = ($i % 2 === 0) ? 1 : 3;
+                $sum += (int)$base12[$i] * $weight;
+            }
+            $checkDigit = (10 - ($sum % 10)) % 10;
+            $codigo = $base12 . $checkDigit;
+
+            if (!isset($existentes[$codigo]) && !isset($codigos[$codigo])) {
+                $codigos[$codigo] = $codigo;
+            }
+        }
+
+        return array_values($codigos);
     }
 }
 

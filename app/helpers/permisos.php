@@ -21,10 +21,83 @@ if (!function_exists('esAdmin')) {
     }
 }
 
+if (!function_exists('puedeAsignarArticulos')) {
+    function puedeAsignarArticulos(): bool
+    {
+        if (esSuperAdmin()) {
+            return true;
+        }
+
+        $usuario = Session::get('usuario');
+        if (!$usuario) {
+            return false;
+        }
+
+        $rolId = (int)($usuario->id_rol ?? 0);
+
+        // Si la sesión tiene activo el permiso asignarArticulos
+        if (tienePermiso('asignarArticulos')) {
+            return true;
+        }
+
+        // Consultar en base de datos en caso de que los permisos del rol hayan cambiado con sesión abierta
+        try {
+            $otorgado = \Illuminate\Support\Facades\DB::table('vista_permisos')
+                ->where('rol', $rolId)
+                ->where('permiso_nombre', 'asignarArticulos')
+                ->value('permiso_otorgado');
+            if (strtolower(trim((string)$otorgado)) === 'activo') {
+                return true;
+            }
+        } catch (\Throwable $e) {}
+
+        return false;
+    }
+}
+
 function tienePermiso(string $nombrePermiso): bool
 {
     if (esSuperAdmin()) {
         return true;
+    }
+
+    $usuario = Session::get('usuario');
+    $rolId = (int)($usuario?->id_rol ?? 0);
+
+    // Administrador (Rol 4): Acceso operativo total excepto gestión estructural de roles
+    if (esAdmin()) {
+        if (in_array($nombrePermiso, ['insertarRol', 'modificarRol', 'desactivarRol'])) {
+            return false;
+        }
+        return true;
+    }
+
+    // Almacenistas (Rol 3): Control operativo total de inventario por código
+    if ($rolId === 3) {
+        $permisosAlmacen = [
+            'consumible - leer', 'consumible - insertar', 'consumible - modificar',
+            'fijos - leer', 'fijos - insertar', 'fijos - modificar',
+            'compra/venta - leer', 'compra/venta - insertar', 'compra/venta - modificar',
+            'vehiculo - leer', 'vehiculo - insertar', 'vehiculo - modificar',
+            'leerEmpresaInterna', 'leerEmpresaExterna', 'leerUbicaciones', 'agregarUbicaciones', 'leerEtiquetas'
+        ];
+        if (in_array($nombrePermiso, $permisosAlmacen)) {
+            return true;
+        }
+    }
+
+    // Auxiliares (Rol 2): Captura y lectura diaria
+    if ($rolId === 2) {
+        $permisosAuxiliar = [
+            'consumible - leer', 'consumible - insertar',
+            'fijos - leer', 'fijos - insertar',
+            'compra/venta - leer', 'compra/venta - insertar',
+            'vehiculo - leer',
+            'leerEmpresaInterna', 'leerEmpresaExterna', 'leerUbicaciones', 'leerEtiquetas'
+        ];
+        if (in_array($nombrePermiso, $permisosAuxiliar)) {
+            return true;
+        }
     }
 
     $permisos = Session::get('usuario_permisos', []);
@@ -61,6 +134,7 @@ function tienePermiso(string $nombrePermiso): bool
     return false;
 }
 
+
 function nombreCompletoUsuario(): string
 {
     $usuario = Session::get('usuario');
@@ -75,7 +149,11 @@ function nombreCompletoUsuario(): string
 if (!function_exists('formatCamelCase')) {
     function formatCamelCase($text)
     {
-        return ucwords(preg_replace('/([a-z])([A-Z])/', '$1 $2', $text));
+        $formatted = ucwords(preg_replace('/([a-z])([A-Z])/', '$1 $2', $text));
+        $formatted = str_ireplace('Etiquetas', 'Categorías', $formatted);
+        $formatted = str_ireplace('Etiqueta', 'Categoría', $formatted);
+        $formatted = str_ireplace('Articulos', 'Artículos', $formatted);
+        return $formatted;
     }
 }
 
@@ -87,6 +165,7 @@ if (!function_exists('getPermisoIcon')) {
             str_contains($permiso, 'insertar') => 'bi-plus-circle text-success',
             str_contains($permiso, 'modificar') => 'bi-pencil-square text-warning',
             str_contains($permiso, 'desactivar') => 'bi-slash-circle text-danger',
+            str_contains($permiso, 'asignar') => 'bi-person-check-fill text-primary',
             default => 'bi-shield-lock text-primary'
         };
     }

@@ -44,7 +44,7 @@
         <div class="card-body p-0">
             <div class="row g-0">
                 <!-- Left Column -->
-                <div class="col-lg-6 p-4 border-end">
+                <div class="col-lg-6 p-3 p-md-4 border-bottom border-lg-bottom-0 border-lg-end">
                     <div class="mb-4">
                         <div class="row g-3">
                             <div class="col-md-6">
@@ -77,7 +77,7 @@
                                 <div class="mb-3">
                                     <label class="form-label text-muted small mb-1">Correo</label>
                                     <p class="fw-medium">
-                                        {{ $usuario->gmail }}
+                                        {{ $usuario->gmail ?: 'Sin correo registrado' }}
                                     </p>
                                 </div>
                             </div>

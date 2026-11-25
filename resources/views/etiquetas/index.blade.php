@@ -31,19 +31,19 @@
 
         @foreach ($etiquetas as $index => $etiqueta)
         <tr class="hover-scale transition-all">
-            <td class="ps-4 fw-medium text-primary">{{ $index + 1 }}</td>
-            <td class="fw-semibold">{{ $etiqueta->nombre }}</td>
-            <td>
+            <td class="ps-4 fw-medium text-primary" data-label="#">{{ $index + 1 }}</td>
+            <td class="fw-semibold" data-label="Nombre">{{ $etiqueta->nombre }}</td>
+            <td data-label="Tipos asociados">
                 <x-badge type="primary">
                     {{ $etiqueta->productos->count() }} tipos de productos
                 </x-badge>
             </td>
-            <td>
+            <td data-label="Unidades">
                 <x-badge type="info">
                     {{ $etiqueta->totalExistenciaProductos() }} unidades
                 </x-badge>
             </td>
-            <td class="pe-4 text-end">
+            <td class="pe-4 text-end" data-label="Acciones">
                 <div class="btn-group btn-group-sm shadow-sm">
                     @if (tienePermiso('leerEtiquetas'))
                     <a href="{{ url('etiquetas/' . $etiqueta->id . '/ver') }}" class="btn btn-sm btn-outline-primary btn-float" data-bs-toggle="tooltip" title="Ver detalle">
@@ -79,7 +79,7 @@
     </x-table>
 
     @if($etiquetas->hasPages())
-    <div class="d-flex justify-content-between align-items-center mt-4">
+    <div class="sgi-pagination-bar d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 mt-4">
         <div class="text-muted">
             Mostrando {{ $etiquetas->firstItem() }} a {{ $etiquetas->lastItem() }} de {{ $etiquetas->total() }} registros
         </div>

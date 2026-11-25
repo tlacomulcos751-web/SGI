@@ -3,7 +3,7 @@
         <form id="formActualizarUsuario" method="POST" action="{{ route('usuarios.actualizar', $usuario->id) }}" class="needs-validation" novalidate>
             @method('PUT')
             @csrf
-            <input type="hidden" name="id" id="usuarioId">
+            <input type="hidden" name="id" id="usuarioId" value="{{ $usuario->id }}">
             <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
                 <!-- Encabezado con gradiente azul -->
                 <div class="modal-header bg-gradient-primary text-white py-3">
@@ -18,20 +18,64 @@
                     <!-- Advertencia importante -->
                     <div class="alert alert-warning border-warning bg-soft-warning rounded-2 mb-4">
                         <i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>Advertencia:</strong> Los cambios realizados aquí afectarán los permisos y acceso del usuario.
+                        <strong>Advertencia:</strong> Los cambios realizados aquí afectarán la información personal, permisos y acceso del usuario.
                     </div>
 
                     <div class="row g-3">
-                        <!-- Correo -->
+                        <!-- Nombre(s) -->
                         <div class="col-md-6">
-                            <label for="gmail" class="form-label fw-medium">Correo Electrónico <span class="text-danger">*</span></label>
+                            <label for="nombre" class="form-label fw-medium">Nombre(s) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="fas fa-user text-primary"></i></span>
+                                <input type="text" class="form-control shadow-sm" id="nombre" name="nombre"
+                                    value="{{ old('nombre', $usuario->nombre) }}" placeholder="Ej. Juan Carlos" required>
+                                <div class="invalid-feedback">Por favor ingrese el nombre del usuario</div>
+                            </div>
+                        </div>
+
+                        <!-- Apellido Paterno -->
+                        <div class="col-md-6">
+                            <label for="apellido" class="form-label fw-medium">Apellido Paterno <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="fas fa-user-tag text-primary"></i></span>
+                                <input type="text" class="form-control shadow-sm" id="apellido" name="apellido"
+                                    value="{{ old('apellido', $usuario->apellido) }}" placeholder="Ej. Pérez" required>
+                                <div class="invalid-feedback">Por favor ingrese el apellido paterno</div>
+                            </div>
+                        </div>
+
+                        <!-- Apellido Materno -->
+                        <div class="col-md-6">
+                            <label for="apellido_m" class="form-label fw-medium">Apellido Materno</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="fas fa-user-tag text-primary"></i></span>
+                                <input type="text" class="form-control shadow-sm" id="apellido_m" name="apellido_m"
+                                    value="{{ old('apellido_m', $usuario->apellido_m) }}" placeholder="Ej. López">
+                            </div>
+                        </div>
+
+                        <!-- Nombre de Usuario (Login) -->
+                        <div class="col-md-6">
+                            <label for="nombre_user" class="form-label fw-medium">Nombre de Usuario <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="fas fa-id-badge text-primary"></i></span>
+                                <input type="text" class="form-control shadow-sm" id="nombre_user" name="nombre_user"
+                                    value="{{ old('nombre_user', $usuario->nombre_user) }}" placeholder="Ej. jperez123" required>
+                                <div class="invalid-feedback">Por favor ingrese el nombre de usuario</div>
+                            </div>
+                            <small class="text-muted">Identificador único para iniciar sesión</small>
+                        </div>
+
+                        <!-- Correo Electrónico -->
+                        <div class="col-md-6">
+                            <label for="gmail" class="form-label fw-medium">Correo Electrónico <span class="text-muted fw-normal">(Opcional)</span></label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light"><i class="fas fa-envelope text-primary"></i></span>
                                 <input type="email" class="form-control shadow-sm" id="gmail" name="gmail"
-                                    value="{{ $usuario->gmail }}" required placeholder="ejemplo@gmail.com">
+                                    value="{{ old('gmail', $usuario->gmail) }}" placeholder="ejemplo@gmail.com">
                                 <div class="invalid-feedback">Por favor ingrese un correo válido</div>
                             </div>
-                            <small class="text-muted">Debe ser una cuenta de correo válida</small>
+                            <small class="text-muted">Opcional. Dejar en blanco si el usuario solo usará su usuario.</small>
                         </div>
 
                         <!-- Estado -->
@@ -40,25 +84,11 @@
                             <div class="input-group">
                                 <span class="input-group-text bg-light"><i class="fas fa-user-check text-primary"></i></span>
                                 <select class="form-select shadow-sm" id="estado" name="estado" required>
-                                    <option value="activo" {{ $usuario->estado == 'activo' ? 'selected' : '' }}>Activo</option>
-                                    <option value="inactivo" {{ $usuario->estado == 'inactivo' ? 'selected' : '' }}>Inactivo</option>
+                                    <option value="activo" {{ old('estado', $usuario->estado) == 'activo' ? 'selected' : '' }}>Activo</option>
+                                    <option value="inactivo" {{ old('estado', $usuario->estado) == 'inactivo' ? 'selected' : '' }}>Inactivo</option>
                                 </select>
                                 <div class="invalid-feedback">Por favor seleccione un estado</div>
                             </div>
-                        </div>
-
-                        <!-- Contraseña -->
-                        <div class="col-md-6">
-                            <label for="password" class="form-label fw-medium">Nueva Contraseña</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light"><i class="fas fa-lock text-primary"></i></span>
-                                <input type="password" class="form-control shadow-sm" id="password" name="password"
-                                    minlength="8" placeholder="Mínimo 8 caracteres">
-                                <button class="btn btn-outline-secondary toggle-password" type="button">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </div>
-                            <small class="text-muted">Dejar en blanco para mantener la actual</small>
                         </div>
 
                         <!-- Rol -->
@@ -68,13 +98,27 @@
                                 <span class="input-group-text bg-light"><i class="fas fa-user-shield text-primary"></i></span>
                                 <select class="form-select shadow-sm" id="rol" name="rol" required>
                                     @foreach($roles as $rol)
-                                    <option value="{{ $rol->id }}" {{ $usuario->id_rol == $rol->id ? 'selected' : '' }}>
+                                    <option value="{{ $rol->id }}" {{ old('rol', $usuario->id_rol) == $rol->id ? 'selected' : '' }}>
                                         {{ $rol->nombre }}
                                     </option>
                                     @endforeach
                                 </select>
                                 <div class="invalid-feedback">Por favor seleccione un rol</div>
                             </div>
+                        </div>
+
+                        <!-- Nueva Contraseña -->
+                        <div class="col-md-6">
+                            <label for="password" class="form-label fw-medium">Nueva Contraseña</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="fas fa-lock text-primary"></i></span>
+                                <input type="password" class="form-control shadow-sm" id="password" name="password"
+                                    minlength="6" placeholder="Mínimo 6 caracteres">
+                                <button class="btn btn-outline-secondary toggle-password" type="button">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">Dejar en blanco para mantener la actual</small>
                         </div>
                     </div>
                 </div>
@@ -132,15 +176,22 @@
 
 <!-- Script para mostrar/ocultar contraseña -->
 <script>
-    document.querySelector('.toggle-password').addEventListener('click', function() {
-        const passwordInput = document.getElementById('password');
-        const icon = this.querySelector('i');
-        if (passwordInput.type === 'password') {
-            passwordInput.type = 'text';
-            icon.classList.replace('fa-eye', 'fa-eye-slash');
-        } else {
-            passwordInput.type = 'password';
-            icon.classList.replace('fa-eye-slash', 'fa-eye');
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleBtn = document.querySelector('#modalActualizarUsuario .toggle-password');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function() {
+                const passwordInput = document.getElementById('password');
+                const icon = this.querySelector('i');
+                if (passwordInput && icon) {
+                    if (passwordInput.type === 'password') {
+                        passwordInput.type = 'text';
+                        icon.classList.replace('fa-eye', 'fa-eye-slash');
+                    } else {
+                        passwordInput.type = 'password';
+                        icon.classList.replace('fa-eye-slash', 'fa-eye');
+                    }
+                }
+            });
         }
     });
 </script>

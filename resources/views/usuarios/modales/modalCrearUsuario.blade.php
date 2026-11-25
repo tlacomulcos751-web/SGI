@@ -54,14 +54,14 @@
 
                         <!-- Correo -->
                         <div class="col-md-6">
-                            <label for="gmail" class="form-label fw-medium">Correo Electrónico <span class="text-danger">*</span></label>
+                            <label for="gmail" class="form-label fw-medium">Correo Electrónico <span class="text-muted fw-normal">(Opcional)</span></label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light"><i class="fas fa-envelope text-primary"></i></span>
                                 <input type="email" class="form-control shadow-sm rounded-end" name="gmail"
-                                    placeholder="ejemplo@gmail.com" required>
+                                    placeholder="ejemplo@gmail.com">
                                 <div class="invalid-feedback">Por favor ingrese un correo válido</div>
                             </div>
-                            <small class="text-muted">Debe ser una cuenta de Gmail válida</small>
+                            <small class="text-muted">Opcional. Si se omite, el usuario iniciará sesión con su nombre de usuario generado.</small>
                         </div>
 
                         <!-- Rol -->

@@ -23,28 +23,44 @@ class ProductoCompraVentaController extends Controller
             return appRedirectToHome('No cuenta con los permisos necesarios');
         }
 
+        $rolId = (int)(Session::get('usuario')->id_rol ?? 0);
+
         // Obtener ubicaciones permitidas según el rol con permiso de lectura
-        $ubicacionesPermitidas = VistaPermisosRolEmpresaUbicacion::where('rol_id', Session::get('usuario')->id_rol)
-            ->where('puede_leer_ubicacion', true)
-            ->pluck('ubicacion_id')
-            ->toArray();
+        if (esSuperAdmin() || esAdmin() || $rolId === 3) {
+            $ubicacionesPermitidas = \App\Models\Ubicacion::pluck('id')->toArray();
+        } else {
+            try {
+                $ubicacionesPermitidas = VistaPermisosRolEmpresaUbicacion::where('rol_id', $rolId)
+                    ->where('puede_leer_ubicacion', true)
+                    ->pluck('ubicacion_id')
+                    ->toArray();
+            } catch (\Throwable $e) {
+                $ubicacionesPermitidas = [];
+            }
+            if (empty($ubicacionesPermitidas)) {
+                $ubicacionesPermitidas = \App\Models\Ubicacion::pluck('id')->toArray();
+            }
+        }
 
         $query = DB::table('productos')
             ->join('productos_compraventa', 'productos_compraventa.producto_id', '=', 'productos.id')
-            ->join('empresa', 'productos_compraventa.empresaVenta_id', '=', 'empresa.id')
-            ->leftJoin('ubicacion', 'productos.ubicacion_id', '=', 'ubicacion.id') // Agregar la relación con ubicación
+            ->leftJoin('empresa', 'productos_compraventa.empresaVenta_id', '=', 'empresa.id')
+            ->leftJoin('ubicacion', 'productos.ubicacion_id', '=', 'ubicacion.id')
             ->select(
                 'productos.id as id_producto',
                 'productos_compraventa.id as id',
                 'productos.nombre as nombre',
-                'empresa.nombre as empresa',
+                DB::raw("COALESCE(empresa.nombre, 'Sin empresa') as empresa"),
                 'productos_compraventa.existencia',
                 'productos_compraventa.estado',
                 'productos_compraventa.fechaEntrada',
                 'productos_compraventa.fechaSalida',
-                'ubicacion.nombre as ubicacion' // Añadir el nombre de la ubicación
-            )
-            ->whereIn('productos.ubicacion_id', $ubicacionesPermitidas);
+                'ubicacion.nombre as ubicacion'
+            );
+
+        if (!esSuperAdmin()) {
+            $query->whereIn('productos.ubicacion_id', $ubicacionesPermitidas);
+        }
 
         if ($request->filled('nombre')) {
             $query->where('productos.nombre', 'like', '%' . $request->nombre . '%');
@@ -73,7 +89,7 @@ class ProductoCompraVentaController extends Controller
         }
 
         if ($request->filled('etiquetas')) {
-            $etiquetas = array_filter($request->etiquetas);
+            $etiquetas = array_filter((array)$request->etiquetas);
             if (count($etiquetas)) {
                 $query->whereIn('productos.id', function ($q) use ($etiquetas) {
                     $q->select('producto_id')
@@ -84,14 +100,31 @@ class ProductoCompraVentaController extends Controller
             }
         }
 
-        $productosCompraVenta = $query->paginate(15)->appends($request->all());
-        $productosCompraVentaTodos = $query->get();
+        $productosCompraVenta = (clone $query)->paginate(15)->appends($request->all());
+        $productosCompraVentaTodos = (clone $query)->get();
+
+        // Ubicaciones para el modal de inserción
         $ubicaciones = VistaPermisosRolEmpresaUbicacion::with('ubicacion')
-            ->where('rol_id', Session::get('usuario')->id_rol)
+            ->where('rol_id', $rolId)
             ->where('puede_insertar_ubicacion', true)
             ->get();
-        $empresas = Empresa::where('status', 'externa')->get();
+
+        if ($ubicaciones->isEmpty() || esSuperAdmin() || esAdmin()) {
+            $ubicaciones = \App\Models\Ubicacion::all()->map(function ($u) {
+                return (object)[
+                    'ubicacion_id' => $u->id,
+                    'puede_insertar_ubicacion' => true,
+                    'ubicacion' => $u,
+                ];
+            });
+        }
+
+        // Empresas para venta: todas disponibles (ordenadas por nombre)
+        $empresas = Empresa::orderBy('nombre')->get();
         $empresasInternas = Empresa::where('status', 'interna')->orderBy('nombre')->get();
+        if ($empresasInternas->isEmpty()) {
+            $empresasInternas = $empresas;
+        }
 
         return view('productos.compraVenta.index', compact('productosCompraVenta', 'ubicaciones', 'empresas', 'productosCompraVentaTodos', 'empresasInternas'));
     }
@@ -113,9 +146,9 @@ class ProductoCompraVentaController extends Controller
                 'precio' => 'nullable|numeric|min:0|max:999999.99',
                 'empresaVenta_id' => 'required|exists:empresa,id',
                 'existencia' => 'required|integer|min:1|max:100000',
-                'fechaEntrada' => 'required|date|before_or_equal:today',
+                'fechaEntrada' => 'required|date',
                 'comentario' => 'nullable|string',
-                'etiquetasInsertar' => 'array',
+                'etiquetasInsertar' => 'nullable|array',
                 'etiquetasInsertar.*' => 'exists:etiquetas,id',
             ]);
 
@@ -153,12 +186,12 @@ class ProductoCompraVentaController extends Controller
                 EtiquetaProducto::insert($datosInsertar);
             }
 
-            return redirect()->back()->with('success', 'Producto de compra-venta ingresado correctamente.');
+            return redirect()->route('productos_compra_venta.index')->with('success', 'Producto de compra-venta ingresado correctamente.');
         } catch (\Illuminate\Validation\ValidationException $e) {
-            throw $e;
+            return redirect()->back()->withErrors($e->validator)->withInput();
         } catch (\Exception $e) {
             Log::error('Error al insertar producto de compra-venta: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Ocurrió un error al insertar el producto de compra-venta: ' . $e->getMessage());
+            return redirect()->back()->withInput()->with('error', 'Ocurrió un error al insertar el producto de compra-venta. Por favor, verifica los datos e intenta nuevamente.');
         }
     }
 

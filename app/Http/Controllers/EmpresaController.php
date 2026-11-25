@@ -47,8 +47,8 @@ class EmpresaController extends Controller
 
     public function ver($id)
     {
-        if (!tienePermiso('leerEmpresaInterna') || !Session::has('usuario')) {
-            return appRedirectToHome('No cuenta con los permisos necesarios');
+        if (!Session::has('usuario')) {
+            return appRedirectToLogin('Debe iniciar sesión para continuar.');
         }
 
         try {
@@ -57,6 +57,12 @@ class EmpresaController extends Controller
             if (!$empresa) {
                 abort(404, 'Empresa no encontrada');
             }
+
+            $permisoRequerido = ($empresa->status === 'externa') ? 'leerEmpresaExterna' : 'leerEmpresaInterna';
+            if (!esSuperAdmin() && !tienePermiso($permisoRequerido)) {
+                return appRedirectToHome('No cuenta con los permisos necesarios');
+            }
+
             $empresas = [];
             $tipo = $empresa->status;
             return view('empresa.view', compact('empresa', 'tipo', 'empresas'));
@@ -68,39 +74,54 @@ class EmpresaController extends Controller
 
     public function insertar(Request $request)
     {
-        if (!tienePermiso('insertarEmpresaInterna') || !Session::has('usuario')) {
+        $esExterna = ($request->tipo === 'externa');
+        $permisoRequerido = $esExterna ? 'insertarEmpresaExterna' : 'insertarEmpresaInterna';
+
+        if (!esSuperAdmin() && (!tienePermiso($permisoRequerido) || !Session::has('usuario'))) {
             return appRedirectToHome('No cuenta con los permisos necesarios');
         }
 
-        $request->validate([
-            'nombre' => 'required|max:80',
-            'nombre_registrado' => 'required|max:150',
-            'rfc' => 'required|max:13',
-            'direccion' => 'required',
-            'latitud' => 'required|numeric',
-            'longitud' => 'required|numeric',
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'nombre' => 'required|string|max:80',
+            'nombre_registrado' => 'required|string|max:150',
+            'rfc' => 'required|string|max:13',
+            'direccion' => 'required|string',
+            'latitud' => 'nullable|numeric',
+            'longitud' => 'nullable|numeric',
             'fotografias.*' => 'image|mimes:jpeg,png,jpg,gif|max:5120'
         ]);
 
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput()
+                ->with('error', 'Error en el formulario: ' . $validator->errors()->first());
+        }
+
         try {
             $empresa = new Empresa();
-            $empresa->nombre = $request->nombre;
-            $empresa->nombre_registrado = $request->nombre_registrado;
-            $empresa->rfc = $request->rfc;
-            $empresa->direccion = $request->direccion;
-            $empresa->latitud = $request->latitud;
-            $empresa->longitud = $request->longitud;
-            $empresa->status = $request->tipo;
+            $empresa->nombre = trim($request->nombre);
+            $empresa->nombre_registrado = trim($request->nombre_registrado);
+            $empresa->rfc = strtoupper(trim($request->rfc));
+            $empresa->direccion = trim($request->direccion);
+            $empresa->latitud = $request->filled('latitud') ? (float)$request->latitud : 19.432608;
+            $empresa->longitud = $request->filled('longitud') ? (float)$request->longitud : -99.133209;
+            $empresa->status = in_array($request->tipo, ['interna', 'externa']) ? $request->tipo : 'interna';
             $empresa->clave = substr(uniqid(), -6); // Generar una clave única de 6 caracteres
 
             // Procesar las imágenes
             $urls = [];
             if ($request->hasFile('fotografias')) {
+                $dir = public_path('empresa');
+                if (!file_exists($dir)) {
+                    mkdir($dir, 0775, true);
+                }
                 foreach ($request->file('fotografias') as $foto) {
-                    $nombreArchivo = time() . '_' . $foto->getClientOriginalName();
+                    $nombreLimpio = preg_replace('/[^a-zA-Z0-9._-]/', '', $foto->getClientOriginalName());
+                    $nombreArchivo = time() . '_' . $nombreLimpio;
 
                     // Mueve la imagen directamente a public/empresa
-                    $foto->move(public_path('empresa'), $nombreArchivo);
+                    $foto->move($dir, $nombreArchivo);
 
                     // Genera la URL accesible desde el navegador
                     $urls[] = asset('empresa/' . $nombreArchivo);
@@ -110,63 +131,108 @@ class EmpresaController extends Controller
             $empresa->fotografias = implode(',', $urls);
             $empresa->save();
 
+            // Asegurar permisos en permisos_empresa y asignación en permisos_rol
+            try {
+                $acciones = ['leer', 'insertar', 'modificar', 'desactivar'];
+                foreach ($acciones as $accion) {
+                    $permisoEmp = \App\Models\PermisoEmpresa::firstOrCreate([
+                        'empresa_id' => $empresa->id,
+                        'accion' => $accion,
+                    ], [
+                        'status' => 'activo'
+                    ]);
+
+                    // Asignar al rol 1 (Super Admin) y rol 4 (Administrador) por defecto
+                    foreach ([1, 4] as $rolId) {
+                        \App\Models\PermisoRol::firstOrCreate([
+                            'rol_id' => $rolId,
+                            'permiso_id' => $permisoEmp->id,
+                            'permiso_tipo' => 'empresa'
+                        ], [
+                            'status' => 'activo'
+                        ]);
+                    }
+                }
+            } catch (\Throwable $pe) {
+                Log::warning('No se pudieron crear los permisos automáticos de la empresa: ' . $pe->getMessage());
+            }
 
             $ruta = $empresa->status != 'externa' ? 'empresa.index' : 'empresa.indexExterna';
             return redirect()->route($ruta)->with('success', 'Empresa creada exitosamente.');
         } catch (\Exception $e) {
             Log::error('Error al insertar empresa: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Error al crear la empresa.');
+            return redirect()->back()->withInput()->with('error', 'Ocurrió un error al crear la empresa. Intenta nuevamente.');
         }
     }
 
     public function actualizar(Request $request)
     {
-        if (!tienePermiso('modificarEmpresaInterna') || !Session::has('usuario')) {
+        $esExterna = ($request->tipo === 'externa');
+        $permisoRequerido = $esExterna ? 'modificarEmpresaExterna' : 'modificarEmpresaInterna';
+
+        if (!esSuperAdmin() && (!tienePermiso($permisoRequerido) || !Session::has('usuario'))) {
             return appRedirectToLogin('No cuenta con los permisos necesarios');
         }
 
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'id' => 'required|exists:empresa,id',
+            'nombre' => 'required|string|max:80',
+            'nombre_registrado' => 'required|string|max:150',
+            'rfc' => 'required|string|max:13',
+            'direccion' => 'required|string',
+            'latitud' => 'nullable|numeric',
+            'longitud' => 'nullable|numeric',
+            'fotografias.*' => 'image|mimes:jpeg,png,jpg,gif|max:5120'
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput()
+                ->with('error', 'Error en el formulario: ' . $validator->errors()->first());
+        }
+
         try {
-            $request->validate([
-                'id' => 'required|exists:empresa,id',
-                'nombre' => 'required|max:80',
-                'nombre_registrado' => 'required|max:150',
-                'rfc' => 'required|max:13',
-                'direccion' => 'required',
-                'latitud' => 'required|numeric',
-                'longitud' => 'required|numeric',
-                'fotografias.*' => 'image|mimes:jpeg,png,jpg,gif|max:5120'
-            ]);
             $empresa = Empresa::findOrFail($request->id);
 
-            $empresa->nombre = $request->nombre;
-            $empresa->nombre_registrado = $request->nombre_registrado;
-            $empresa->rfc = $request->rfc;
-            $empresa->direccion = $request->direccion;
-            $empresa->latitud = $request->latitud;
-            $empresa->longitud = $request->longitud;
+            $empresa->nombre = trim($request->nombre);
+            $empresa->nombre_registrado = trim($request->nombre_registrado);
+            $empresa->rfc = strtoupper(trim($request->rfc));
+            $empresa->direccion = trim($request->direccion);
+            if ($request->filled('latitud')) {
+                $empresa->latitud = (float)$request->latitud;
+            }
+            if ($request->filled('longitud')) {
+                $empresa->longitud = (float)$request->longitud;
+            }
 
             // Manejo de imágenes
-            $imagenesActuales = $empresa->fotografias ? explode(',', $empresa->fotografias) : [];
+            $imagenesActuales = $empresa->fotografias ? array_filter(explode(',', $empresa->fotografias)) : [];
 
             if ($request->hasFile('fotografias')) {
+                $dir = public_path('empresa');
+                if (!file_exists($dir)) {
+                    mkdir($dir, 0775, true);
+                }
                 foreach ($request->file('fotografias') as $foto) {
-                    $nombreArchivo = time() . '_' . $foto->getClientOriginalName();
+                    $nombreLimpio = preg_replace('/[^a-zA-Z0-9._-]/', '', $foto->getClientOriginalName());
+                    $nombreArchivo = time() . '_' . $nombreLimpio;
 
                     // Mueve la imagen directamente a public/empresa
-                    $foto->move(public_path('empresa'), $nombreArchivo);
+                    $foto->move($dir, $nombreArchivo);
 
                     // Genera la URL accesible desde el navegador
-                    $urls[] = asset('empresa/' . $nombreArchivo);
+                    $imagenesActuales[] = asset('empresa/' . $nombreArchivo);
                 }
             }
 
-            $empresa->fotografias = implode(',', array_merge($imagenesActuales, $urls));
+            $empresa->fotografias = implode(',', $imagenesActuales);
             $empresa->save();
 
             return redirect()->back()->with('success', 'Empresa actualizada exitosamente.');
         } catch (\Exception $e) {
             Log::error('Error al actualizar empresa: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Error al actualizar la empresa.');
+            return redirect()->back()->withInput()->with('error', 'Ocurrió un error al actualizar la empresa. Intenta nuevamente.');
         }
     }
 
@@ -221,7 +287,7 @@ class EmpresaController extends Controller
 
         try {
             $usuario = Session::get('usuario');
-            $empresas = Empresa::obtenerEmpresasConPermisos($usuario->id_rol);
+            $empresas = Empresa::where('status', 'interna')->get();
             $ubicaciones = Ubicacion::paginate(10); // ✅ Correcto
             return view('empresa.ubicaciones.index', compact('ubicaciones', 'empresas'));
         } catch (\Exception $e) {
@@ -232,10 +298,7 @@ class EmpresaController extends Controller
 
     public function insertarUbicacion(Request $request)
     {
-        if (
-            !tienePermiso('agregarUbicaciones') || tienePermiso('insertar' . $request->nombre)
-            || !Session::has('usuario')
-        ) {
+        if (!Session::has('usuario') || !tienePermiso('agregarUbicaciones')) {
             return appRedirectToHome('No cuenta con los permisos necesarios');
         }
 
@@ -258,14 +321,17 @@ class EmpresaController extends Controller
 
     public function actualizarUbicacion(Request $request, $id)
     {
-        if (
-            !tienePermiso('modificarUbicaciones') || tienePermiso('actualizar' . $request->nombre)
-            || !Session::has('usuario')
-        ) {
+        if (!Session::has('usuario')) {
             return appRedirectToHome('No cuenta con los permisos necesarios');
         }
 
-        if ($request->estado == 'baja' && !tienePermiso('desactivarUbicaciones')) {
+        $ubicacion = Ubicacion::findOrFail($id);
+
+        if (!tienePermiso('modificarUbicaciones') && !tienePermiso($ubicacion->nombre . ' - modificar')) {
+            return appRedirectToHome('No cuenta con los permisos necesarios');
+        }
+
+        if ($request->estado == 'baja' && !tienePermiso('desactivarUbicaciones') && !tienePermiso($ubicacion->nombre . ' - desactivar')) {
             return redirect()->back()->with('error', 'No cuenta con los permisos necesarios para dar de baja ubicaciones.');
         }
         if ($request->estado == 'baja' && VistaProductosUnificada::contarPorUbicacion($id) > 0) {

@@ -7,8 +7,8 @@ use App\Models\VistaProductosUnificada;
 ?>
 <div class="container main-content animate__animated animate__fadeIn">
     <!-- Header Section -->
-    <div class="glass-nav rounded-4 p-4 mb-5 shadow-sm">
-        <div class="d-flex justify-content-between align-items-center">
+    <div class="glass-nav rounded-4 p-3 p-md-4 mb-4 mb-md-5 shadow-sm">
+        <div class="sgi-page-header d-flex flex-column flex-md-row justify-content-between align-items-stretch align-items-md-center gap-3">
             <div>
                 @if($tipo == 'interna')
                 <h1 class="display-5 fw-bold text-gradient mb-2">
@@ -23,9 +23,11 @@ use App\Models\VistaProductosUnificada;
                 @endif
             </div>
             @if ((tienePermiso('insertarEmpresaInterna') && $tipo == 'interna') || (tienePermiso('insertarEmpresaExterna') && $tipo == 'externa'))
-            <button type="button" class="btn btn-primary btn-float btn-insertar-empresa" data-bs-toggle="modal" data-bs-target="#modalInsertarEmpresa">
-                <i class="fas fa-plus-circle me-2"></i> Nueva Empresa
-            </button>
+            <div class="sgi-header-actions">
+                <button type="button" class="btn btn-primary btn-float btn-insertar-empresa" data-bs-toggle="modal" data-bs-target="#modalInsertarEmpresa">
+                    <i class="fas fa-plus-circle me-2"></i> Nueva Empresa
+                </button>
+            </div>
             @endif
         </div>
     </div>
@@ -39,7 +41,7 @@ use App\Models\VistaProductosUnificada;
     <div class="card glass-nav border-0 shadow-sm">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+                <table class="table table-hover align-middle mb-0 sgi-mobile-cards">
                     <thead class="table-light">
                         <tr>
                             <th class="ps-4 py-3">#</th>
@@ -55,22 +57,22 @@ use App\Models\VistaProductosUnificada;
                     <tbody id="empresas-tbody">
                         @foreach ($empresas as $index => $empresa)
                         <tr class="hover-scale">
-                            <td class="ps-4">{{ $index + 1 }}</td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="bg-primary bg-opacity-10 p-2 rounded-circle me-3">
+                            <td class="ps-4" data-label="#">{{ $index + 1 }}</td>
+                            <td data-label="Nombre">
+                                <div class="d-flex align-items-center justify-content-end justify-content-md-start">
+                                    <div class="bg-primary bg-opacity-10 p-2 rounded-circle me-2 me-md-3 d-none d-md-block">
                                         <i class="fas fa-building text-primary"></i>
                                     </div>
                                     <strong>{{ $empresa->nombre }}</strong>
                                 </div>
                             </td>
-                            <td>
+                            <td data-label="Status">
                                 <span class="badge rounded-pill bg-{{ $empresa->status == 'Activa' ? 'success' : 'secondary' }} bg-opacity-10 text-{{ $empresa->status == 'Activa' ? 'success' : 'secondary' }}">
                                     {{ $empresa->status }}
                                 </span>
                             </td>
                             @if ($tipo == 'interna')
-                            <td>
+                            <td data-label="Ubicaciones">
                                 <div class="d-flex align-items-center">
                                     <i class="fas fa-map-marker-alt text-info me-2"></i>
                                     {{ $empresa->cantidadUbicaciones() }}
@@ -78,21 +80,21 @@ use App\Models\VistaProductosUnificada;
                             </td>
                             @endif
                             @if ($tipo == 'interna')
-                            <td>
+                            <td data-label="Tipos de Productos">
                                 <div class="d-flex align-items-center">
                                     <i class="fas fa-box text-success me-2"></i>
                                     {{ count(VistaProductosUnificada::obtenerActivosEmpresa($empresa->nombre)) }}
                                 </div>
                             </td>
                             @else
-                            <td>
+                            <td data-label="Tipos de Productos">
                                 <div class="d-flex align-items-center">
                                     <i class="fas fa-boxes text-warning me-2"></i>
                                     {{ $empresa->cantidadProductosCompraVenta() }}
                                 </div>
                             </td>
                             @endif
-                            <td class="pe-4 text-end">
+                            <td class="pe-4 text-end" data-label="Acciones">
                                 <div class="d-flex justify-content-end gap-2">
                                     @if ($tipo == 'interna')
                                     <a href="{{ url('empresa/view/' . $empresa->id) }}" class="btn btn-sm btn-outline-primary btn-float" data-bs-toggle="tooltip" title="Ver detalle">

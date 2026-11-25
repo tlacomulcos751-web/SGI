@@ -47,16 +47,9 @@ class FijosImport implements
             return is_string($value) ? trim($value) : $value;
         }, $row);
 
-        // Si la fila NO tiene nombre_del_producto, código ni precio → ignorar fila completa
-        // (Corrección total del problema)
-        $isTotallyEmpty =
-            empty($clean['nombre_del_producto']) &&
-            empty($clean['codigo_de_barra']) &&
-            empty($clean['precio']) &&
-            $this->allOtherValuesNull($clean);
-
-        if ($isTotallyEmpty) {
-            Log::info("Fila $index ignorada completamente (vacía o inválida).");
+        // Si la fila no tiene nombre_del_producto → ignorar fila completa (permite plantillas con códigos de barra prellenados)
+        if (empty($clean['nombre_del_producto'])) {
+            Log::info("Fila $index ignorada (sin nombre de producto).");
             return null; // ⬅ Esto la saca del proceso
         }
 

@@ -3,23 +3,23 @@
 
 @section('content')
 <div class="container main-content animate__animated animate__fadeIn">
-    <div class="d-flex justify-content-between align-items-center mb-5">
+    <div class="sgi-page-header d-flex flex-column flex-md-row justify-content-between align-items-stretch align-items-md-center gap-3 mb-4 mb-md-5">
         <div>
             <h1 class="display-5 fw-bold text-gradient mb-2">
                 <i class="fas fa-car me-2"></i>Vehículos
             </h1>
-            <p class="lead text-muted"><i class="fas fa-info-circle me-2"></i>Listado de vehículos registrados</p>
+            <p class="lead text-muted mb-0"><i class="fas fa-info-circle me-2"></i>Listado de vehículos registrados</p>
         </div>
-        <div>
+        <div class="sgi-header-actions d-flex flex-wrap gap-2">
             @if(tienePermiso('vehiculo - insertar'))
             <a href="{{ route('vehiculos.crear') }}" class="btn btn-primary">
-                <i class="fas fa-plus me-2"></i>Registrar Vehículo
+                <i class="fas fa-plus me-1"></i>Registrar Vehículo
             </a>
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#importModal">
-                Importar Productos
+                <i class="fas fa-file-import me-1"></i>Importar
             </button>
             <a href="{{ route('plantilla.vehiculos') }}" class="btn btn-primary">
-                Descargar Plantilla – Vehículos
+                <i class="fas fa-file-excel me-1"></i>Plantilla Vehículos
             </a>
             @else
             <button class="btn btn-secondary" disabled>
@@ -32,8 +32,8 @@
     <div class="card glass-nav border-0 shadow-sm overflow-hidden">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <div class="p-3">
-                    <form action="{{ route('imprimirVehiculos') }}" method="post" class="print-form d-inline-block">
+                <div class="p-3 d-flex flex-wrap gap-2">
+                    <form action="{{ route('imprimirVehiculos') }}" method="post" class="print-form d-inline-block m-0">
                         @csrf
                         <input type="hidden" name="producto" value='@json($vehiculosTodos)'>
                         <button type="submit" class="btn btn-outline-secondary btn-sm shadow-sm">
@@ -41,7 +41,7 @@
                         </button>
                     </form>
                     @if(request('responsable_id'))
-                        <form action="{{ route('imprimirVehiculosResponsable') }}" method="POST" target="_blank" class="d-inline-block ms-2">
+                        <form action="{{ route('imprimirVehiculosResponsable') }}" method="POST" target="_blank" class="d-inline-block m-0">
                             @csrf
                             <input type="hidden" name="responsable_id" value="{{ request('responsable_id') }}">
                             <button type="submit" class="btn btn-success btn-sm shadow-sm">
@@ -52,7 +52,7 @@
                 </div>
 
                 <form id="form-filtros-vehiculos" onsubmit="event.preventDefault(); fetchVehiculos();">
-                    <table class="table table-hover align-middle mb-0">
+                    <table class="table table-hover align-middle mb-0 sgi-mobile-cards">
                         <thead class="table-light">
                             <tr>
                                 <th>#</th>
@@ -64,7 +64,7 @@
                                 <th>Estado</th>
                                 <th class="text-end">Acciones</th>
                             </tr>
-                            <tr>
+                            <tr class="sgi-filter-row">
                                 <th></th>
                                 <th><input type="text" name="marca" class="form-control form-control-sm filtro-api-vehiculo-text" placeholder="Marca..." value="{{ request('marca') }}"></th>
                                 <th><input type="text" name="modelo" class="form-control form-control-sm filtro-api-vehiculo-text" placeholder="Modelo..." value="{{ request('modelo') }}"></th>
@@ -88,7 +88,7 @@
                                     </select>
                                 </th>
                                 <th class="text-end">
-                                    <button type="button" class="btn btn-sm btn-primary" onclick="fetchVehiculos()"><i class="fas fa-search"></i></button>
+                                    <button type="button" class="btn btn-sm btn-primary" onclick="fetchVehiculos()"><i class="fas fa-search"></i><span class="d-md-none ms-1">Buscar</span></button>
                                 </th>
                             </tr>
                         </thead>
@@ -107,7 +107,7 @@
     </div>
 
     <!-- Paginación Asíncrona API Vehículos -->
-    <div class="d-flex justify-content-between align-items-center mt-4" id="contenedor-paginacion-vehiculos">
+    <div class="sgi-pagination-bar d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 mt-4" id="contenedor-paginacion-vehiculos">
         <div class="text-muted" id="info-paginacion-vehiculos">
             Mostrando {{ $vehiculos->firstItem() ?? 0 }} a {{ $vehiculos->lastItem() ?? 0 }} de {{ $vehiculos->total() ?? 0 }} registros
         </div>
@@ -207,18 +207,18 @@ function renderTablaVehiculos(data, meta) {
 
         html += `
             <tr class="hover-scale">
-                <td>${num}</td>
-                <td><strong>${escapeHtmlVehiculo(v.marca || '')}</strong></td>
-                <td>${escapeHtmlVehiculo(v.modelo || '')}</td>
-                <td>${escapeHtmlVehiculo(v.ubicacion_nombre || v.ubicacion || 'Sin ubicación')}</td>
-                <td>${escapeHtmlVehiculo(v.responsable_nombre || 'Sin responsable')}</td>
-                <td>${v.año || ''}</td>
-                <td>
+                <td data-label="#">${num}</td>
+                <td data-label="Marca"><strong>${escapeHtmlVehiculo(v.marca || '')}</strong></td>
+                <td data-label="Modelo">${escapeHtmlVehiculo(v.modelo || '')}</td>
+                <td data-label="Ubicación">${escapeHtmlVehiculo(v.ubicacion_nombre || v.ubicacion || 'Sin ubicación')}</td>
+                <td data-label="Responsable">${escapeHtmlVehiculo(v.responsable_nombre || 'Sin responsable')}</td>
+                <td data-label="Año">${v.año || ''}</td>
+                <td data-label="Estado">
                     <span class="badge bg-${estadoBadge}">
                         ${capitalizeVehiculo(v.estado || 'activo')}
                     </span>
                 </td>
-                <td class="text-end">
+                <td class="text-end" data-label="Acciones">
                     <a href="/vehiculos/${v.id}/ver" class="btn btn-sm btn-outline-primary" title="Ver detalles">
                         <i class="fas fa-eye"></i>
                     </a>

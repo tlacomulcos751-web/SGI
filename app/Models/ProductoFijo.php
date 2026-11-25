@@ -16,6 +16,7 @@ class ProductoFijo extends Model
         'estado',
         'calidad',
         'responsable',
+        'proyecto',
         'fotografias',
         'fechaEntrada',
         'fechaSalida',

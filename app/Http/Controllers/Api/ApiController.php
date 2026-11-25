@@ -69,10 +69,23 @@ class ApiController extends Controller
      */
     private function ubicacionesPermitidas(): array
     {
-        return VistaPermisosRolEmpresaUbicacion::where('rol_id', Session::get('usuario')->id_rol)
-            ->where('puede_leer_ubicacion', true)
-            ->pluck('ubicacion_id')
-            ->toArray();
+        $rolId = (int)(Session::get('usuario')->id_rol ?? 0);
+
+        // Super Admin (Rol 1), Administrador (Rol 4) o Almacenistas (Rol 3): Acceso operativo total
+        if (esSuperAdmin() || esAdmin() || $rolId === 3) {
+            return \App\Models\Ubicacion::pluck('id')->toArray();
+        }
+
+        try {
+            $ubicaciones = VistaPermisosRolEmpresaUbicacion::where('rol_id', $rolId)
+                ->where('puede_leer_ubicacion', true)
+                ->pluck('ubicacion_id')
+                ->toArray();
+        } catch (\Throwable $e) {
+            $ubicaciones = [];
+        }
+
+        return !empty($ubicaciones) ? $ubicaciones : \App\Models\Ubicacion::pluck('id')->toArray();
     }
 
 
@@ -201,7 +214,7 @@ class ApiController extends Controller
             $query = DB::table('productos')
                 ->join('productos_fijos', 'productos_fijos.producto_id', '=', 'productos.id')
                 ->leftJoin('ubicacion', 'productos.ubicacion_id', '=', 'ubicacion.id')
-                ->leftJoin('empresa', 'productos.empresa_id', '=', 'empresa.id')
+                ->leftJoin('empresa', 'ubicacion.empresa_id', '=', 'empresa.id')
                 ->leftJoin('usuario', 'productos_fijos.responsable', '=', 'usuario.id')
                 ->select(
                     'productos.id as id_producto',
@@ -209,7 +222,7 @@ class ApiController extends Controller
                     'productos.nombre as nombre',
                     'productos.precio as precio',
                     'productos.codigoBarra as codigoBarra',
-                    'productos.empresa_id as empresa_id',
+                    'ubicacion.empresa_id as empresa_id',
                     'empresa.nombre as empresa_nombre',
                     'productos_fijos.clave as clave',
                     'productos_fijos.estado as estado',
@@ -219,8 +232,11 @@ class ApiController extends Controller
                     'ubicacion.nombre as ubicacion',
                     DB::raw("CONCAT(usuario.nombre, ' ', usuario.apellido) as responsable_nombre"),
                     DB::raw("'fijo' as tipo_producto")
-                )
-                ->whereIn('productos.ubicacion_id', $ubicacionesPermitidas);
+                );
+
+            if (!esSuperAdmin()) {
+                $query->whereIn('productos.ubicacion_id', $ubicacionesPermitidas);
+            }
 
             // Filtros
             if ($request->filled('clave'))    $query->where('productos_fijos.clave', 'like', '%' . $request->clave . '%');
@@ -314,22 +330,25 @@ class ApiController extends Controller
             $query = DB::table('productos')
                 ->join('productos_consumibles', 'productos_consumibles.producto_id', '=', 'productos.id')
                 ->leftJoin('ubicacion', 'productos.ubicacion_id', '=', 'ubicacion.id')
-                ->leftJoin('empresa', 'productos.empresa_id', '=', 'empresa.id')
+                ->leftJoin('empresa', 'ubicacion.empresa_id', '=', 'empresa.id')
                 ->select(
                     'productos.id as id_producto',
                     'productos_consumibles.id as id',
                     'productos.nombre as nombre',
                     'productos.precio as precio',
                     'productos.codigoBarra as codigoBarra',
-                    'productos.empresa_id as empresa_id',
+                    'ubicacion.empresa_id as empresa_id',
                     'empresa.nombre as empresa_nombre',
                     'productos_consumibles.existencia as existencia',
                     'ubicacion.nombre as ubicacion',
                     DB::raw("IF(productos_consumibles.existencia > 0, 'activo', 'agotado') as estado"),
                     'productos.fecha_registro as fecha_registro',
                     DB::raw("'consumible' as tipo_producto")
-                )
-                ->whereIn('productos.ubicacion_id', $ubicacionesPermitidas);
+                );
+
+            if (!esSuperAdmin()) {
+                $query->whereIn('productos.ubicacion_id', $ubicacionesPermitidas);
+            }
 
             // Filtros
             if ($request->filled('nombre'))    $query->where('productos.nombre', 'like', '%' . $request->nombre . '%');
@@ -446,7 +465,7 @@ class ApiController extends Controller
 
             $query = DB::table('productos')
                 ->join('productos_compraventa', 'productos_compraventa.producto_id', '=', 'productos.id')
-                ->join('empresa', 'productos_compraventa.empresaVenta_id', '=', 'empresa.id')
+                ->leftJoin('empresa', 'productos_compraventa.empresaVenta_id', '=', 'empresa.id')
                 ->leftJoin('ubicacion', 'productos.ubicacion_id', '=', 'ubicacion.id')
                 ->select(
                     'productos.id as id_producto',
@@ -454,15 +473,18 @@ class ApiController extends Controller
                     'productos.nombre as nombre',
                     'productos.precio as precio',
                     'productos.codigoBarra as codigoBarra',
-                    'empresa.nombre as empresa',
+                    DB::raw("COALESCE(empresa.nombre, 'Sin empresa') as empresa"),
                     'productos_compraventa.existencia',
                     'productos_compraventa.estado',
                     'productos_compraventa.fechaEntrada as fecha_entrada',
                     'productos_compraventa.fechaSalida as fecha_salida',
                     'ubicacion.nombre as ubicacion',
                     DB::raw("'compraventa' as tipo_producto")
-                )
-                ->whereIn('productos.ubicacion_id', $ubicacionesPermitidas);
+                );
+
+            if (!esSuperAdmin()) {
+                $query->whereIn('productos.ubicacion_id', $ubicacionesPermitidas);
+            }
 
             // Filtros
             if ($request->filled('nombre'))    $query->where('productos.nombre', 'like', '%' . $request->nombre . '%');
@@ -560,8 +582,11 @@ class ApiController extends Controller
                     DB::raw("IF(vehiculos.eliminado = 0, 'activo', 'inactivo') as estado")
                 )
                 ->join('ubicacion', 'vehiculos.ubicacion_id', '=', 'ubicacion.id')
-                ->join('usuario as u', 'vehiculos.responsable', '=', 'u.id')
-                ->whereIn('vehiculos.ubicacion_id', $ubicacionesPermitidas);
+                ->join('usuario as u', 'vehiculos.responsable', '=', 'u.id');
+
+            if (!esSuperAdmin()) {
+                $query->whereIn('vehiculos.ubicacion_id', $ubicacionesPermitidas);
+            }
 
             // Filtro de estado
             if ($request->filled('estado')) {

@@ -8,15 +8,15 @@
  <div class="container main-content animate__animated animate__fadeIn">
 
      <!-- Header Section -->
-     <div class="rounded-4 p-4 mb-5 shadow-sm company-header">
-         <div class="d-flex justify-content-between align-items-center">
+     <div class="rounded-4 p-3 p-md-4 mb-4 mb-md-5 shadow-sm company-header">
+         <div class="sgi-page-header d-flex flex-column flex-md-row justify-content-between align-items-stretch align-items-md-center gap-3">
              <div>
                  <h1 class="display-5 fw-bold mb-2 company-title">
                      <i class="fas fa-building me-2"></i>Empresa {{ $empresa->nombre }}
                  </h1>
-                 <p class="company-subtitle">Detalles completos de la empresa</p>
+                 <p class="company-subtitle mb-0">Detalles completos de la empresa</p>
              </div>
-             <div class="d-flex gap-2">
+             <div class="sgi-header-actions d-flex flex-wrap gap-2">
                  @if (tienePermiso('modificarEmpresaInterna'))
                  <button type="button"
                      data-bs-toggle="modal"

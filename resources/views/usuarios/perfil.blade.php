@@ -20,7 +20,7 @@
                 <div class="card-body p-4">
                     <div class="row">
                         <!-- Información del usuario -->
-                        <div class="col-md-5 border-end pe-md-4">
+                        <div class="col-md-5 border-bottom border-md-bottom-0 border-md-end pb-4 pb-md-0 pe-md-4">
                             <div class="d-flex align-items-center mb-4">
                                 <div class="symbol symbol-100px symbol-circle bg-light-primary me-4">
                                     <span class="symbol-label fs-2 text-primary">{{ substr($usuario->nombre, 0, 1) }}{{ substr($usuario->apellido, 0, 1) }}</span>
@@ -59,7 +59,7 @@
                         </div>
 
                         <!-- Formulario de actualización -->
-                        <div class="col-md-7 ps-md-4">
+                        <div class="col-md-7 pt-4 pt-md-0 ps-md-4">
                             <h5 class="fw-bold mb-4 text-primary">
                                 <i class="bi bi-pencil-square me-2"></i>Actualizar información
                             </h5>
@@ -69,14 +69,14 @@
                                 @method('PUT')
 
                                 <div class="mb-4">
-                                    <label for="gmail" class="form-label fw-medium">Correo electrónico</label>
+                                    <label for="gmail" class="form-label fw-medium">Correo electrónico <span class="text-muted fw-normal">(Opcional)</span></label>
                                     <div class="input-group">
                                         <span class="input-group-text bg-light">
                                             <i class="bi bi-envelope-at text-primary"></i>
                                         </span>
                                         <input type="email" name="gmail" id="gmail"
                                             class="form-control form-control-lg"
-                                            value="{{ $usuario->gmail }}" required>
+                                            value="{{ $usuario->gmail }}" placeholder="ejemplo@correo.com">
                                     </div>
                                     <div class="invalid-feedback">
                                         Por favor ingresa un correo electrónico válido

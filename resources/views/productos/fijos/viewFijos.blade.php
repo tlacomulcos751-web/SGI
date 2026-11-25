@@ -51,7 +51,7 @@ $etiquetasUnicas = \App\Models\Etiqueta::obtenerEtiquetasActivas(); // Suponiend
             </div>
 
             <!-- Botones de Acción con Iconify y Estilo Corporativo Elegante -->
-            <div class="d-flex flex-wrap align-items-center gap-2 w-100 w-xl-auto">
+            <div class="sgi-header-actions d-flex flex-wrap align-items-center gap-2 w-100 w-xl-auto">
                 <!-- Botón Vale de Salida -->
                 <a href="{{ route('productos.fijos.generarVale', $productoFijo->id) }}" 
                    class="btn btn-light btn-sm rounded-pill px-3 py-2 text-dark fw-semibold shadow-xs d-inline-flex align-items-center gap-2 border-0"
@@ -118,7 +118,7 @@ $etiquetasUnicas = \App\Models\Etiqueta::obtenerEtiquetasActivas(); // Suponiend
         <div class="card-body p-0">
             <div class="row g-0">
                 <!-- Left Column -->
-                <div class="col-lg-6 p-4 border-end">
+                <div class="col-lg-6 p-3 p-md-4 border-bottom border-lg-bottom-0 border-lg-end">
                     <div class="mb-4">
                         <h6 class="text-uppercase text-muted small fw-bold mb-3">Datos básicos</h6>
                         <div class="row g-3">
@@ -451,7 +451,7 @@ $etiquetasUnicas = \App\Models\Etiqueta::obtenerEtiquetasActivas(); // Suponiend
     'etiquetas' => $etiquetas,
     'producto' => $producto,
     'todasLasEtiquetas' => $todasLasEtiquetas,
-    'permiso' => 'consumible - modificar'
+    'permiso' => 'fijos - modificar'
     ])
 
     <div id="movimientos-wrapper">

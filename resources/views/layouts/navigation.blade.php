@@ -8,9 +8,12 @@
     <title>@yield('title', 'Home')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    <!-- Bootstrap 5.3 CSS CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+
     <!-- Estilos directos del Sistema SGI -->
-    <link rel="stylesheet" href="{{ asset('css/sgi-design.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('css/home.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="/css/sgi-design.css?v={{ time() }}">
+    <link rel="stylesheet" href="/css/home.css?v={{ time() }}">
 
     <!-- Iconos FontAwesome, Bootstrap Icons e Iconify CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -18,9 +21,142 @@
     <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
     
     <style>
+        /* =========================================================
+           CORRECCIÓN DEFINITIVA DE MODALES CENTRADOS Y SCROLLBAR
+           ========================================================= */
+        .modal {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100vh !important;
+            height: 100dvh !important;
+            z-index: 1055 !important;
+            overflow-x: hidden !important;
+            overflow-y: hidden !important;
+            padding: 0 !important;
+        }
+
+        .modal.show,
+        .modal.fade.show {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        .modal-dialog {
+            margin: auto !important;
+            max-height: 90vh !important;
+            max-height: 90dvh !important;
+            width: 95% !important;
+            max-width: 1140px;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            transform: none !important;
+            pointer-events: none;
+        }
+
+        .modal-dialog::before,
+        .modal-dialog-centered::before,
+        .modal-dialog-scrollable::before {
+            display: none !important;
+            content: none !important;
+            height: 0 !important;
+            width: 0 !important;
+        }
+
+        .modal-content,
+        form.modal-content {
+            background: var(--bg-card, #1e293b) !important;
+            color: var(--text-main, #f8fafc) !important;
+            border-radius: 16px !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--border-color, #334155) !important;
+            border: 1px solid var(--border-color, #334155) !important;
+            display: flex !important;
+            flex-direction: column !important;
+            max-height: 85vh !important;
+            max-height: 85dvh !important;
+            min-height: 0 !important;
+            overflow: hidden !important;
+            width: 100% !important;
+            pointer-events: auto;
+            position: relative;
+        }
+
+        .modal-header {
+            flex-shrink: 0 !important;
+            padding: 16px 24px !important;
+            border-bottom: 1px solid var(--border-color, #334155) !important;
+        }
+
+        .modal-footer {
+            flex-shrink: 0 !important;
+            padding: 14px 24px !important;
+            border-top: 1px solid var(--border-color, #334155) !important;
+        }
+
+        .modal-body {
+            flex: 1 1 auto !important;
+            min-height: 0 !important;
+            max-height: calc(85vh - 130px) !important;
+            max-height: calc(85dvh - 130px) !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            -webkit-overflow-scrolling: touch;
+            padding: 20px 24px !important;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(148, 163, 184, 0.6) transparent;
+        }
+
+        @media (max-width: 767.98px) {
+            .modal-dialog {
+                width: calc(100% - 16px) !important;
+                max-height: 92dvh !important;
+                margin: 8px auto !important;
+            }
+            .modal-content,
+            form.modal-content {
+                max-height: 92dvh !important;
+                border-radius: 16px !important;
+            }
+            .modal-header {
+                padding: 14px 16px !important;
+            }
+            .modal-body {
+                padding: 16px !important;
+                max-height: calc(92dvh - 125px) !important;
+            }
+            .modal-footer {
+                padding: 12px 16px !important;
+            }
+        }
+
+        .modal-body::-webkit-scrollbar {
+            width: 8px !important;
+        }
+        .modal-body::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1) !important;
+            border-radius: 4px;
+        }
+        .modal-body::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.5) !important;
+            border-radius: 4px;
+        }
+        .modal-body::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.8) !important;
+        }
         /* Garantizar visibilidad y compatibilidad del Navbar de Bootstrap */
         .navbar-collapse {
             visibility: visible !important;
+        }
+        @media (max-width: 991.98px) {
+            #navbarNav:not(.show) {
+                display: none !important;
+            }
+            #navbarNav.show {
+                display: block !important;
+            }
         }
         .navbar {
             background-color: var(--bg-card, #ffffff);
@@ -127,218 +263,45 @@
     <!-- FIN LOADING OVERLAY -->
 
 
-    <div class="container-fluid px-3 px-xl-4" style="max-width: 1440px;">
+    <div class="container-fluid px-2 px-sm-3 px-xl-4" style="max-width: 1440px;">
         <!-- Navbar optimizada -->
-        <nav class="navbar navbar-expand-lg mb-4 shadow-sm">
+        <nav class="navbar navbar-expand-lg mb-3 mb-md-4 shadow-sm">
             <div class="container-fluid px-0">
-                <a class="navbar-brand brand me-3" href="{{ route('web.home') }}">
+                <a class="navbar-brand brand me-2 me-lg-3 order-1" href="{{ route('web.home') }}">
                     <img src="{{ asset('logos/nodo.jpeg') }}" alt="Logo Nodo" style="height: 42px; width: auto; border-radius: 8px;">
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
 
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav me-auto">
-                        {{-- Inicio --}}
-                        <li class="nav-item">
-                            <a class="nav-link nav-link-custom" href="{{ route('web.home') }}">
-                                <i class="fas fa-home"></i> Inicio
-                            </a>
-                        </li>
+                {{-- Acciones rápidas visibles tanto en móvil como en escritorio --}}
+                @php
+                    $usuarioNav = Session::get('usuario');
+                    $rolIdNav = (int)($usuarioNav?->id_rol ?? 0);
+                    $esStaff = esSuperAdmin() || esAdmin() || ($rolIdNav > 0 && $rolIdNav <= 3);
+                    $puedeVerConsumibles = esSuperAdmin() || tienePermiso('consumible - leer') || $esStaff;
+                    $puedeVerMantenimiento = esSuperAdmin() || tienePermiso('fijos - leer') || $esStaff;
+                    
+                    $alertasStockCriticoList = ($puedeVerConsumibles && function_exists('obtenerConsumiblesCriticos')) ? obtenerConsumiblesCriticos() : collect();
+                    $countStockCritico = ($puedeVerConsumibles && function_exists('contarConsumiblesCriticos')) ? contarConsumiblesCriticos() : 0;
 
-                        {{-- Empresas --}}
-                        @php
-                        $usuarioNav = Session::get('usuario');
-                        $rolIdNav = (int)($usuarioNav?->id_rol ?? 0);
-                        $esStaff = esSuperAdmin() || esAdmin() || ($rolIdNav > 0 && $rolIdNav <= 3);
-                        $mostrarEmpresas = tienePermiso('leerEmpresaInterna') || tienePermiso('leerEmpresaExterna') || tienePermiso('leerUbicaciones') || $esStaff;
-                        @endphp
-                        @if ($mostrarEmpresas)
-                        <li class="nav-item dropdown">
-                            <a class="nav-link nav-link-custom dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-building me-2"></i> Empresas
-                            </a>
-                            <ul class="dropdown-menu shadow-lg dropdown-menu-end">
-                                @if (tienePermiso('leerEmpresaInterna') || $esStaff)
-                                <li>
-                                    <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('empresa.index') }}">
-                                        <span class="badge bg-primary bg-opacity-10 text-primary me-2"><i class="fas fa-cube"></i></span>
-                                        <span class="flex-grow-1">Nuestras Empresas</span>
-                                        <i class="fas fa-arrow-right text-muted"></i>
-                                    </a>
-                                </li>
-                                @endif
-                                @if (tienePermiso('leerEmpresaExterna') || $esStaff)
-                                <li>
-                                    <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('empresa.indexExterna') }}">
-                                        <span class="badge bg-success bg-opacity-10 text-success me-2"><i class="fas fa-tint"></i></span>
-                                        <span class="flex-grow-1">Empresas Externas</span>
-                                        <i class="fas fa-arrow-right text-muted"></i>
-                                    </a>
-                                </li>
-                                @endif
-                                @if (tienePermiso('leerUbicaciones') || $esStaff)
-                                <li>
-                                    <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('empresa.ubicaciones') }}">
-                                        <span class="badge bg-info bg-opacity-10 text-info me-2"><i class="fas fa-map-marker-alt"></i></span>
-                                        <span class="flex-grow-1">Ubicaciones</span>
-                                        <i class="fas fa-arrow-right text-muted"></i>
-                                    </a>
-                                </li>
-                                @endif
-                            </ul>
-                        </li>
-                        @endif
+                    $alertasMntList = ($puedeVerMantenimiento && function_exists('obtenerMantenimientosProximos')) ? obtenerMantenimientosProximos(30, 8) : collect();
+                    $countMnt = ($puedeVerMantenimiento && function_exists('contarMantenimientosProximos')) ? contarMantenimientosProximos(30) : 0;
 
-                        {{-- Productos --}}
-                        @php
-                        $mostrarProductos = tienePermiso('fijos - leer') || tienePermiso('consumible - leer') || tienePermiso('compra/venta - leer') || tienePermiso('vehiculo - leer') || $esStaff;
-                        @endphp
-                        @if ($mostrarProductos)
-                        <li class="nav-item dropdown">
-                            <a class="nav-link nav-link-custom dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-boxes me-2"></i> Productos
-                            </a>
-                            <ul class="dropdown-menu shadow-lg dropdown-menu-end">
-                                <li>
-                                    <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('productos') }}">
-                                        <span class="badge bg-secondary bg-opacity-10 text-secondary me-2"><i class="fas fa-cubes"></i></span>
-                                        <span class="flex-grow-1">Todos los Productos</span>
-                                        <i class="fas fa-arrow-right text-muted"></i>
-                                    </a>
-                                </li>
-                                <li>
-                                    <hr class="dropdown-divider mx-3">
-                                </li>
+                    $totalAlertas = $countStockCritico + $countMnt;
+                @endphp
 
-                                @if (tienePermiso('fijos - leer') || $esStaff)
-                                <li>
-                                    <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('productos.indexFijos') }}">
-                                        <span class="badge bg-primary bg-opacity-10 text-primary me-2"><i class="fas fa-cube"></i></span>
-                                        <span class="flex-grow-1">Activos Fijos</span>
-                                        <i class="fas fa-arrow-right text-muted"></i>
-                                    </a>
-                                </li>
-                                @endif
-
-                                @if (tienePermiso('consumible - leer') || $esStaff)
-                                <li>
-                                    <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('productos_consumibles.index') }}">
-                                        <span class="badge bg-danger bg-opacity-10 text-danger me-2"><i class="fas fa-utensils"></i></span>
-                                        <span class="flex-grow-1">Consumibles</span>
-                                        <i class="fas fa-arrow-right text-muted"></i>
-                                    </a>
-                                </li>
-                                @endif
-
-                                @if (tienePermiso('compra/venta - leer') || $esStaff)
-                                <li>
-                                    <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('productos_compra_venta.index') }}">
-                                        <span class="badge bg-warning bg-opacity-10 text-warning me-2"><i class="fas fa-exchange-alt"></i></span>
-                                        <span class="flex-grow-1">Compra/Venta</span>
-                                        <i class="fas fa-arrow-right text-muted"></i>
-                                    </a>
-                                </li>
-                                @endif
-
-                                @if(tienePermiso('vehiculo - leer') || $esStaff)
-                                <li>
-                                    <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('vehiculos.index') }}">
-                                        <span class="badge bg-info bg-opacity-10 text-info me-2"><i class="fas fa-car"></i></span>
-                                        <span class="flex-grow-1">Vehículos</span>
-                                        <i class="fas fa-arrow-right text-muted"></i>
-                                    </a>
-                                </li>
-                                @endif
-                            </ul>
-                        </li>
-                        @endif
-
-                        {{-- Usuarios y Roles (Solo Super Admin) --}}
-                        @if (esSuperAdmin())
-                        <li class="nav-item dropdown">
-                            <a class="nav-link nav-link-custom dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-users me-2"></i> Usuarios
-                            </a>
-                            <ul class="dropdown-menu shadow-lg dropdown-menu-end">
-                                @if (tienePermiso('leerRol'))
-                                <li>
-                                    <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('roles.index') }}">
-                                        <span class="badge bg-primary bg-opacity-10 text-primary me-2"><i class="fas fa-user-tag"></i></span>
-                                        <span class="flex-grow-1">Roles</span>
-                                        <i class="fas fa-arrow-right text-muted"></i>
-                                    </a>
-                                </li>
-                                @endif
-                                @if (esSuperAdmin() && tienePermiso('leerUsuarios'))
-                                <li>
-                                    <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('usuarios.index') }}">
-                                        <span class="badge bg-secondary bg-opacity-10 text-secondary me-2"><i class="fas fa-users"></i></span>
-                                        <span class="flex-grow-1">Usuarios</span>
-                                        <i class="fas fa-arrow-right text-muted"></i>
-                                    </a>
-                                </li>
-                                @endif
-                            </ul>
-                        </li>
-                        @endif
-                        {{-- Categorías / Etiquetas --}}
-                        @if (tienePermiso('leerEtiquetas') || esSuperAdmin() || $esStaff)
-                        <li class="nav-item dropdown">
-                            <a class="nav-link nav-link-custom dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-tags me-2"></i> Categorías
-                            </a>
-                            <ul class="dropdown-menu shadow-lg dropdown-menu-end">
-                                <li>
-                                    <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('etiquetas.index') }}">
-                                        <span class="badge bg-primary bg-opacity-10 text-primary me-2"><i class="fas fa-tags"></i></span>
-                                        <div class="flex-grow-1">
-                                            <span class="d-block fw-semibold">Categorías del Sistema</span>
-                                            <small class="text-muted" style="font-size: 0.75rem;">Administrar clasificación de productos</small>
-                                        </div>
-                                        <i class="fas fa-arrow-right text-muted ms-2"></i>
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                        @endif
-
-                        {{-- Configuración --}}
-                        <li class="nav-item">
-                            <a class="nav-link nav-link-custom" href="{{route('usuarios.perfil')}}">
-                                <i class="bi bi-person-fill-gear"></i> Mi Perfil
-                            </a>
-                        </li>
-                    </ul>
-
-                    {{-- Notificaciones de Mantenimiento y Stock Crítico --}}
-                    @php
-                        $puedeVerConsumibles = esSuperAdmin() || tienePermiso('consumible - leer') || $esStaff;
-                        $puedeVerMantenimiento = esSuperAdmin() || tienePermiso('fijos - leer') || $esStaff;
-                        
-                        $alertasStockCriticoList = ($puedeVerConsumibles && function_exists('obtenerConsumiblesCriticos')) ? obtenerConsumiblesCriticos() : collect();
-                        $countStockCritico = ($puedeVerConsumibles && function_exists('contarConsumiblesCriticos')) ? contarConsumiblesCriticos() : 0;
-
-                        $alertasMntList = ($puedeVerMantenimiento && function_exists('obtenerMantenimientosProximos')) ? obtenerMantenimientosProximos(30, 8) : collect();
-                        $countMnt = ($puedeVerMantenimiento && function_exists('contarMantenimientosProximos')) ? contarMantenimientosProximos(30) : 0;
-
-                        $totalAlertas = $countStockCritico + $countMnt;
-                    @endphp
+                <div class="sgi-nav-actions order-2 order-lg-3 ms-auto ms-lg-0">
                     @if($puedeVerConsumibles || $puedeVerMantenimiento || $esStaff)
-                        <div class="nav-item dropdown me-3 list-unstyled">
-                            <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--text-main);" title="Notificaciones del Sistema: Mantenimientos y Stock">
+                        <div class="nav-item dropdown list-unstyled me-1 me-lg-2">
+                            <a class="nav-link position-relative p-2" href="#" role="button" data-sgi-dropdown="true" aria-expanded="false" style="color: var(--text-main);" title="Notificaciones del Sistema: Mantenimientos y Stock" aria-label="Notificaciones">
                                 <i class="fas fa-bell fs-5"></i>
                                 @if($totalAlertas > 0)
-                                    <span class="position-absolute top-10 start-90 translate-middle badge rounded-pill shadow-sm animate__animated animate__pulse animate__infinite" 
-                                          style="font-size: 0.65em; background-color: {{ $countStockCritico > 0 ? '#dc3545' : '#f59e0b' }}; color: white;">
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill shadow-sm sgi-notif-badge" 
+                                          style="font-size: 0.62rem; padding: 0.25em 0.5em; background-color: {{ $countStockCritico > 0 ? '#dc3545' : '#f59e0b' }}; color: white;">
                                         {{ $totalAlertas }}
                                         <span class="visually-hidden">alertas</span>
                                     </span>
                                 @endif
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end shadow-lg" style="width: 360px; max-height: 480px; overflow-y: auto;">
+                            <ul class="dropdown-menu dropdown-menu-end shadow-lg sgi-notif-dropdown" style="width: 360px; max-height: 480px; overflow-y: auto;">
                                 <li class="p-2 border-bottom bg-white">
                                     <button type="button" class="btn btn-sm btn-outline-primary w-100 rounded-pill py-1 d-flex align-items-center justify-content-center gap-1 shadow-xs" onclick="activarPushNotificaciones()">
                                         <i class="fas fa-bell"></i> <span style="font-size: 0.75rem;">Habilitar Alertas Push</span>
@@ -458,32 +421,218 @@
                     @endif
 
                     {{-- Botón Pistola Lectora / Escáner de Código de Barras --}}
-                    <div class="d-flex align-items-center me-2">
-                        <button class="btn btn-sm btn-outline-primary rounded-pill px-3 d-flex align-items-center gap-2 shadow-xs" 
-                                type="button" 
-                                data-bs-toggle="modal" 
-                                data-bs-target="#modalEscanerPistola"
-                                title="Escanear con Pistola Lectora (Atajo: F2 o Alt+B)">
-                            <i class="fas fa-barcode"></i>
-                            <span class="d-none d-xl-inline fw-medium">Escanear</span>
-                            <kbd class="bg-primary text-white border-0 py-0 px-1 rounded small d-none d-xxl-inline" style="font-size:0.68rem;">F2</kbd>
-                        </button>
-                    </div>
+                    <button class="btn btn-sm btn-outline-primary rounded-pill px-2 px-lg-3 d-flex align-items-center gap-2 shadow-xs" 
+                            type="button" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#modalEscanerPistola"
+                            title="Escanear con Pistola Lectora (Atajo: F2 o Alt+B)"
+                            aria-label="Escanear código de barras"
+                            style="min-height: 36px;">
+                        <i class="fas fa-barcode"></i>
+                        <span class="d-none d-xl-inline fw-medium">Escanear</span>
+                        <kbd class="bg-primary text-white border-0 py-0 px-1 rounded small d-none d-xxl-inline" style="font-size:0.68rem;">F2</kbd>
+                    </button>
 
                     {{-- Theme Toggle --}}
-                    <div class="d-flex align-items-center me-3">
-                        <button class="theme-toggle" onclick="toggleTheme()" type="button" aria-label="Cambiar tema">
-                            <i class="fas fa-moon"></i>
-                        </button>
-                    </div>
+                    <button class="theme-toggle" onclick="toggleTheme()" type="button" aria-label="Cambiar tema">
+                        <i class="fas fa-moon"></i>
+                    </button>
 
-                    {{-- Cerrar sesión --}}
-                    <form action="{{ route('logout') }}" method="POST" class="d-flex m-0 p-0 flex-shrink-0">
+                    {{-- Cerrar sesión (Escritorio) --}}
+                    <form action="{{ route('logout') }}" method="POST" class="d-none d-lg-flex m-0 p-0 flex-shrink-0 ms-1">
                         @csrf
                         <button type="submit" class="logout-btn rounded-pill d-flex align-items-center gap-2">
                             <i class="fas fa-sign-out-alt"></i> <span>Cerrar sesión</span>
                         </button>
                     </form>
+
+                    {{-- Botón Menú Móvil --}}
+                    <button class="navbar-toggler" type="button" onclick="return window.sgiToggleNavbar ? window.sgiToggleNavbar(this, event) : false;"
+                        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                </div>
+
+                <div class="collapse navbar-collapse order-3 order-lg-2" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        {{-- Inicio --}}
+                        <li class="nav-item">
+                            <a class="nav-link nav-link-custom" href="{{ route('web.home') }}">
+                                <span><i class="fas fa-home"></i> Inicio</span>
+                            </a>
+                        </li>
+
+                        {{-- Empresas --}}
+                        @php
+                        $mostrarEmpresas = tienePermiso('leerEmpresaInterna') || tienePermiso('leerEmpresaExterna') || tienePermiso('leerUbicaciones') || $esStaff;
+                        @endphp
+                        @if ($mostrarEmpresas)
+                        <li class="nav-item dropdown">
+                            <a class="nav-link nav-link-custom dropdown-toggle" href="#" role="button" data-sgi-dropdown="true" aria-expanded="false">
+                                <span><i class="fas fa-building me-2"></i> Empresas</span>
+                            </a>
+                            <ul class="dropdown-menu shadow-lg dropdown-menu-end">
+                                @if (tienePermiso('leerEmpresaInterna') || $esStaff)
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('empresa.index') }}">
+                                        <span class="badge bg-primary bg-opacity-10 text-primary me-2"><i class="fas fa-cube"></i></span>
+                                        <span class="flex-grow-1">Nuestras Empresas</span>
+                                        <i class="fas fa-arrow-right text-muted"></i>
+                                    </a>
+                                </li>
+                                @endif
+                                @if (tienePermiso('leerEmpresaExterna') || $esStaff)
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('empresa.indexExterna') }}">
+                                        <span class="badge bg-success bg-opacity-10 text-success me-2"><i class="fas fa-tint"></i></span>
+                                        <span class="flex-grow-1">Empresas Externas</span>
+                                        <i class="fas fa-arrow-right text-muted"></i>
+                                    </a>
+                                </li>
+                                @endif
+                                @if (tienePermiso('leerUbicaciones') || $esStaff)
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('empresa.ubicaciones') }}">
+                                        <span class="badge bg-info bg-opacity-10 text-info me-2"><i class="fas fa-map-marker-alt"></i></span>
+                                        <span class="flex-grow-1">Ubicaciones</span>
+                                        <i class="fas fa-arrow-right text-muted"></i>
+                                    </a>
+                                </li>
+                                @endif
+                            </ul>
+                        </li>
+                        @endif
+
+                        {{-- Productos --}}
+                        @php
+                        $mostrarProductos = tienePermiso('fijos - leer') || tienePermiso('consumible - leer') || tienePermiso('compra/venta - leer') || tienePermiso('vehiculo - leer') || $esStaff;
+                        @endphp
+                        @if ($mostrarProductos)
+                        <li class="nav-item dropdown">
+                            <a class="nav-link nav-link-custom dropdown-toggle" href="#" role="button" data-sgi-dropdown="true" aria-expanded="false">
+                                <span><i class="fas fa-boxes me-2"></i> Productos</span>
+                            </a>
+                            <ul class="dropdown-menu shadow-lg dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('productos') }}">
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary me-2"><i class="fas fa-cubes"></i></span>
+                                        <span class="flex-grow-1">Todos los Productos</span>
+                                        <i class="fas fa-arrow-right text-muted"></i>
+                                    </a>
+                                </li>
+                                <li>
+                                    <hr class="dropdown-divider mx-3">
+                                </li>
+
+                                @if (tienePermiso('fijos - leer') || $esStaff)
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('productos.indexFijos') }}">
+                                        <span class="badge bg-primary bg-opacity-10 text-primary me-2"><i class="fas fa-cube"></i></span>
+                                        <span class="flex-grow-1">Activos Fijos</span>
+                                        <i class="fas fa-arrow-right text-muted"></i>
+                                    </a>
+                                </li>
+                                @endif
+
+                                @if (tienePermiso('consumible - leer') || $esStaff)
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('productos_consumibles.index') }}">
+                                        <span class="badge bg-danger bg-opacity-10 text-danger me-2"><i class="fas fa-utensils"></i></span>
+                                        <span class="flex-grow-1">Consumibles</span>
+                                        <i class="fas fa-arrow-right text-muted"></i>
+                                    </a>
+                                </li>
+                                @endif
+
+                                @if (tienePermiso('compra/venta - leer') || $esStaff)
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('productos_compra_venta.index') }}">
+                                        <span class="badge bg-warning bg-opacity-10 text-warning me-2"><i class="fas fa-exchange-alt"></i></span>
+                                        <span class="flex-grow-1">Compra/Venta</span>
+                                        <i class="fas fa-arrow-right text-muted"></i>
+                                    </a>
+                                </li>
+                                @endif
+
+                                @if(tienePermiso('vehiculo - leer') || $esStaff)
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('vehiculos.index') }}">
+                                        <span class="badge bg-info bg-opacity-10 text-info me-2"><i class="fas fa-car"></i></span>
+                                        <span class="flex-grow-1">Vehículos</span>
+                                        <i class="fas fa-arrow-right text-muted"></i>
+                                    </a>
+                                </li>
+                                @endif
+                            </ul>
+                        </li>
+                        @endif
+
+                        {{-- Usuarios y Roles (Solo Super Admin) --}}
+                        @if (esSuperAdmin())
+                        <li class="nav-item dropdown">
+                            <a class="nav-link nav-link-custom dropdown-toggle" href="#" role="button" data-sgi-dropdown="true" aria-expanded="false">
+                                <span><i class="fas fa-users me-2"></i> Usuarios</span>
+                            </a>
+                            <ul class="dropdown-menu shadow-lg dropdown-menu-end">
+                                @if (tienePermiso('leerRol'))
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('roles.index') }}">
+                                        <span class="badge bg-primary bg-opacity-10 text-primary me-2"><i class="fas fa-user-tag"></i></span>
+                                        <span class="flex-grow-1">Roles</span>
+                                        <i class="fas fa-arrow-right text-muted"></i>
+                                    </a>
+                                </li>
+                                @endif
+                                @if (esSuperAdmin() && tienePermiso('leerUsuarios'))
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('usuarios.index') }}">
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary me-2"><i class="fas fa-users"></i></span>
+                                        <span class="flex-grow-1">Usuarios</span>
+                                        <i class="fas fa-arrow-right text-muted"></i>
+                                    </a>
+                                </li>
+                                @endif
+                            </ul>
+                        </li>
+                        @endif
+                        {{-- Categorías / Etiquetas --}}
+                        @if (tienePermiso('leerEtiquetas') || esSuperAdmin() || $esStaff)
+                        <li class="nav-item dropdown">
+                            <a class="nav-link nav-link-custom dropdown-toggle" href="#" role="button" data-sgi-dropdown="true" aria-expanded="false">
+                                <span><i class="fas fa-tags me-2"></i> Categorías</span>
+                            </a>
+                            <ul class="dropdown-menu shadow-lg dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('etiquetas.index') }}">
+                                        <span class="badge bg-primary bg-opacity-10 text-primary me-2"><i class="fas fa-tags"></i></span>
+                                        <div class="flex-grow-1">
+                                            <span class="d-block fw-semibold">Categorías del Sistema</span>
+                                            <small class="text-muted" style="font-size: 0.75rem;">Administrar clasificación de productos</small>
+                                        </div>
+                                        <i class="fas fa-arrow-right text-muted ms-2"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        @endif
+
+                        {{-- Configuración --}}
+                        <li class="nav-item">
+                            <a class="nav-link nav-link-custom" href="{{route('usuarios.perfil')}}">
+                                <span><i class="bi bi-person-fill-gear"></i> Mi Perfil</span>
+                            </a>
+                        </li>
+                    </ul>
+
+                    {{-- Cerrar sesión dentro del menú móvil --}}
+                    <div class="sgi-mobile-drawer-footer d-lg-none">
+                        <form action="{{ route('logout') }}" method="POST" class="m-0 p-0">
+                            @csrf
+                            <button type="submit" class="logout-btn rounded-pill d-flex align-items-center justify-content-center gap-2">
+                                <i class="fas fa-sign-out-alt"></i> <span>Cerrar sesión</span>
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </nav>
@@ -495,12 +644,26 @@
             </div>
 
             @if(session('error'))
-            <div class="alert alert-danger">
-                {{ session('error') }}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
             </div>
             @elseif(session('success'))
-            <div class="alert alert-success">
-                {{ session('success') }}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+            </div>
+            @endif
+
+            @if($errors->any())
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i><strong>Por favor revisa los siguientes errores:</strong>
+                <ul class="mb-0 mt-1 ps-3">
+                    @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
             </div>
             @endif
             @yield('content')
@@ -513,11 +676,21 @@
 
     @stack('modals')
 
-    {{-- Librerías Globales para Códigos de Barras --}}
+    {{-- Librerías Globales para Códigos de Barras y Autoguardado de Modales --}}
     <script src="{{ asset('js/JsBarcode.all.min.js') }}"></script>
     <script src="{{ asset('js/barcode-helper.js') }}"></script>
+    <script src="{{ asset('js/sgi-draft.js') }}?v={{ time() }}"></script>
 
     <script>
+        // Asegurar que al abrir cualquier modal el contenido inicie al principio y bien visible
+        document.addEventListener('show.bs.modal', function (event) {
+            const modalEl = event.target;
+            if (modalEl) {
+                const bodyEl = modalEl.querySelector('.modal-body');
+                if (bodyEl) bodyEl.scrollTop = 0;
+            }
+        });
+
         // Asegurar que al cerrar modales nunca quede un backdrop huérfano
         document.addEventListener('hidden.bs.modal', function () {
             if (!document.querySelector('.modal.show')) {
@@ -581,6 +754,166 @@
                 console.log("Error creando notificación:", e);
             }
         }
+    </script>
+    <!-- Sistema Global SGI: Soporte Infalible (sin conflictos con Bootstrap ni espera a DOMContentLoaded) -->
+    <script>
+        (function() {
+            function closeAllDropdowns() {
+                document.querySelectorAll('.dropdown-menu.show').forEach(function(m) {
+                    m.classList.remove('show');
+                });
+                document.querySelectorAll('.dropdown-toggle[aria-expanded="true"], [data-bs-toggle="dropdown"][aria-expanded="true"], [data-sgi-dropdown][aria-expanded="true"]').forEach(function(b) {
+                    b.setAttribute('aria-expanded', 'false');
+                });
+            }
+
+            window.sgiToggleNavbar = function(btn, event) {
+                if (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                const navCollapse = document.getElementById('navbarNav');
+                if (!navCollapse) return false;
+
+                const isOpen = navCollapse.classList.contains('show');
+                navCollapse.classList.remove('collapsing');
+                navCollapse.style.height = '';
+
+                if (isOpen) {
+                    navCollapse.classList.remove('show');
+                    navCollapse.style.display = 'none';
+                    if (btn) {
+                        btn.classList.add('collapsed');
+                        btn.setAttribute('aria-expanded', 'false');
+                    }
+                    closeAllDropdowns();
+                } else {
+                    navCollapse.classList.add('show');
+                    navCollapse.style.display = 'block';
+                    if (btn) {
+                        btn.classList.remove('collapsed');
+                        btn.setAttribute('aria-expanded', 'true');
+                    }
+                }
+                return false;
+            };
+
+            window.addEventListener('resize', function() {
+                const navCollapse = document.getElementById('navbarNav');
+                if (navCollapse && window.innerWidth >= 992) {
+                    navCollapse.style.display = '';
+                }
+            });
+
+            // 1. MENÚS DESPLEGABLES DEL NAVBAR Y BOTONES DROPDOWN (1 toque abre, 1 toque cierra)
+            document.addEventListener('click', function(e) {
+                const dropdownBtn = e.target.closest('[data-sgi-dropdown], .dropdown-toggle, [data-bs-toggle="dropdown"]');
+                if (dropdownBtn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (e.stopImmediatePropagation) {
+                        e.stopImmediatePropagation();
+                    }
+
+                    const parent = dropdownBtn.closest('.dropdown, .btn-group, .nav-item');
+                    const menu = parent ? parent.querySelector('.dropdown-menu') : dropdownBtn.nextElementSibling;
+                    if (menu) {
+                        const estaAbierto = menu.classList.contains('show');
+                        closeAllDropdowns();
+                        if (!estaAbierto) {
+                            menu.classList.add('show');
+                            dropdownBtn.setAttribute('aria-expanded', 'true');
+                        } else if (typeof dropdownBtn.blur === 'function') {
+                            dropdownBtn.blur();
+                        }
+                    }
+                    return;
+                }
+
+                // Cerrar cualquier menú al hacer clic fuera
+                if (!e.target.closest('.dropdown-menu')) {
+                    closeAllDropdowns();
+                }
+            }, true);
+
+            // 2. ACORDEONES / COLLAPSE (Permisos en Roles y Módulos - 1 Clic Infalible)
+            document.addEventListener('click', function(event) {
+                const toggleBtn = event.target.closest('[data-sgi-toggle="collapse"], [data-bs-toggle="collapse"], .accordion-button');
+                if (!toggleBtn || toggleBtn.classList.contains('navbar-toggler')) return;
+
+                const selector = toggleBtn.getAttribute('data-sgi-target') || toggleBtn.getAttribute('data-bs-target') || toggleBtn.getAttribute('href') || toggleBtn.getAttribute('data-target');
+                if (!selector || !selector.startsWith('#')) return;
+
+                const target = document.querySelector(selector);
+                if (!target) return;
+
+                // Detener cualquier conflicto con Bootstrap u otros listeners
+                event.preventDefault();
+                event.stopPropagation();
+                if (event.stopImmediatePropagation) {
+                    event.stopImmediatePropagation();
+                }
+
+                const isCurrentlyOpen = target.classList.contains('show') && target.style.display !== 'none';
+
+                if (isCurrentlyOpen) {
+                    // CONTRAER (CERRAR) CON 1 SOLO CLIC
+                    target.classList.remove('show');
+                    target.classList.remove('collapsing');
+                    target.style.display = 'none';
+                    target.style.height = '';
+                    toggleBtn.classList.add('collapsed');
+                    toggleBtn.setAttribute('aria-expanded', 'false');
+                } else {
+                    // EXPANDIR (ABRIR) CON 1 SOLO CLIC
+                    const parentSelector = target.getAttribute('data-sgi-parent') || target.getAttribute('data-bs-parent');
+                    if (parentSelector) {
+                        const parent = document.querySelector(parentSelector);
+                        if (parent) {
+                            parent.querySelectorAll(':scope > .accordion-item > .accordion-collapse.show, :scope > .accordion-collapse.show').forEach(function(sibling) {
+                                if (sibling !== target) {
+                                    sibling.classList.remove('show');
+                                    sibling.classList.remove('collapsing');
+                                    sibling.style.display = 'none';
+                                    sibling.style.height = '';
+                                    const siblingBtn = document.querySelector(`[data-sgi-target="#${sibling.id}"], [data-bs-target="#${sibling.id}"], [href="#${sibling.id}"]`);
+                                    if (siblingBtn) {
+                                        siblingBtn.classList.add('collapsed');
+                                        siblingBtn.setAttribute('aria-expanded', 'false');
+                                    }
+                                }
+                            });
+                        }
+                    }
+
+                    target.classList.add('show');
+                    target.classList.remove('collapsing');
+                    target.style.display = 'block';
+                    target.style.height = '';
+                    toggleBtn.classList.remove('collapsed');
+                    toggleBtn.setAttribute('aria-expanded', 'true');
+                }
+            }, true);
+
+            // 3. SOPORTE SELECCIONAR / DESELECCIONAR TODOS LOS PERMISOS
+            document.addEventListener('click', function(event) {
+                if (event.target.classList.contains('seleccionar-todo')) {
+                    const target = event.target.getAttribute('data-target');
+                    const container = document.querySelector(target);
+                    if (container) {
+                        container.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
+                    }
+                }
+
+                if (event.target.classList.contains('deseleccionar-todo')) {
+                    const target = event.target.getAttribute('data-target');
+                    const container = document.querySelector(target);
+                    if (container) {
+                        container.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+                    }
+                }
+            });
+        })();
     </script>
     @stack('scripts')
 </body>

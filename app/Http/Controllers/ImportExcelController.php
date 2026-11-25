@@ -29,9 +29,11 @@ class ImportExcelController extends Controller
             Excel::import(new CompraVentaImport, $archivo);
 
             return redirect()->back()->with('success', 'Productos de compra-venta importados correctamente.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (Exception $e) {
             Log::error('Error al importar compra-venta: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Error al importar: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Ocurrió un error al importar el archivo de compra-venta. Verifica el formato e intenta nuevamente.');
         }
     }
 
@@ -50,9 +52,11 @@ class ImportExcelController extends Controller
             Excel::import(new FijosImport, $archivo);
 
             return redirect()->back()->with('success', 'Productos fijos importados correctamente.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (Exception $e) {
             Log::error('Error al importar productos fijos: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Error al importar: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Ocurrió un error al importar el archivo de activos fijos. Verifica el formato e intenta nuevamente.');
         }
     }
 
@@ -71,9 +75,11 @@ class ImportExcelController extends Controller
             Excel::import(new ConsumiblesImport, $archivo);
 
             return redirect()->back()->with('success', 'Productos consumibles importados correctamente.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (Exception $e) {
             Log::error('Error al importar consumibles: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Error al importar: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Ocurrió un error al importar el archivo de consumibles. Verifica el formato e intenta nuevamente.');
         }
     }
 
@@ -92,9 +98,11 @@ class ImportExcelController extends Controller
             Excel::import(new VehiculosImport, $archivo);
 
             return redirect()->back()->with('success', 'Vehículos importados correctamente.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (Exception $e) {
             Log::error('Error al importar vehículos: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Error al importar: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Ocurrió un error al importar el archivo de vehículos. Verifica el formato e intenta nuevamente.');
         }
     }
 }

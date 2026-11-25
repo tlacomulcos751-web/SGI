@@ -16,6 +16,7 @@ class Movimiento extends Model
         'accion',
         'fecha',
         'documentacion',
+        'proyecto',
         'comentario'
     ];
 

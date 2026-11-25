@@ -2,19 +2,21 @@
 @section('title', 'Usuarios')
 @section('content')
 <div class="container main-content animate__animated animate__fadeIn">
-    <div class="d-flex justify-content-between align-items-center mb-5">
+    <div class="sgi-page-header d-flex flex-column flex-md-row justify-content-between align-items-stretch align-items-md-center gap-3 mb-4 mb-md-5">
         <div>
             <h1 class="display-5 fw-bold text-gradient mb-2">
                 <i class="fas fa-users me-2"></i>Usuarios
             </h1>
-            <p class="lead text-muted">
+            <p class="lead text-muted mb-0">
                 <i class="fas fa-info-circle me-2"></i>Gestión de usuarios registrados en el sistema
             </p>
         </div>
         @if(tienePermiso('insertarUsuarios'))
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCrearUsuario">
-            <i class="fas fa-plus me-2"></i>Agregar Usuario
-        </button>
+        <div class="sgi-header-actions">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCrearUsuario">
+                <i class="fas fa-plus me-2"></i>Agregar Usuario
+            </button>
+        </div>
         @endif
     </div>
 
@@ -22,7 +24,7 @@
         <div class="card-body p-0">
             <div class="table-responsive">
                 <form id="form-filtros" method="GET">
-                    <table class="table table-hover align-middle mb-0">
+                    <table class="table table-hover align-middle mb-0 sgi-mobile-cards">
                         <thead class="table-light">
                             <tr>
                                 <th class="ps-4">#</th>
@@ -33,7 +35,7 @@
                                 <th>Estado</th>
                                 <th class="pe-4 text-end">Acciones</th>
                             </tr>
-                            <tr>
+                            <tr class="sgi-filter-row">
                                 <th></th>
                                 <th>
                                     <input type="text" class="form-control form-control-sm" name="nombre" placeholder="Buscar nombre..." value="{{ request('nombre') }}">
@@ -63,7 +65,7 @@
                                 </th>
                                 <th>
                                     <button type="submit" class="btn btn-sm btn-primary">
-                                        <i class="fas fa-search"></i>
+                                        <i class="fas fa-search"></i><span class="d-md-none ms-1">Buscar</span>
                                     </button>
                                 </th>
                             </tr>
@@ -71,23 +73,29 @@
                         <tbody>
                             @forelse($usuarios as $index => $usuario)
                             <tr class="hover-scale">
-                                <td class="ps-4 text-muted">{{ ($usuarios->currentPage() - 1) * $usuarios->perPage() + $loop->iteration }}</td>
-                                <td>{{ $usuario->nombreCompleto() }}</td>
-                                <td>
+                                <td class="ps-4 text-muted" data-label="#">{{ ($usuarios->currentPage() - 1) * $usuarios->perPage() + $loop->iteration }}</td>
+                                <td data-label="Nombre">{{ $usuario->nombreCompleto() }}</td>
+                                <td data-label="Usuario">
                                     <span class="font-monospace">{{ $usuario->nombre_user }}</span>
                                 </td>
-                                <td>{{ $usuario->gmail }}</td>
-                                <td>
+                                <td data-label="Correo">
+                                    @if($usuario->gmail)
+                                        {{ $usuario->gmail }}
+                                    @else
+                                        <span class="text-muted fst-italic">Sin correo</span>
+                                    @endif
+                                </td>
+                                <td data-label="Rol">
                                     <span class="badge bg-secondary bg-opacity-10 text-secondary">
                                         {{ $usuario->rol->nombre ?? 'Sin rol' }}
                                     </span>
                                 </td>
-                                <td>
+                                <td data-label="Estado">
                                     <span class="badge rounded-pill bg-{{ $usuario->estado == 'activo' ? 'success' : 'secondary' }} bg-opacity-10 text-{{ $usuario->estado == 'activo' ? 'success' : 'secondary' }}">
                                         {{ ucfirst($usuario->estado) }}
                                     </span>
                                 </td>
-                                <td class="pe-4 text-end">
+                                <td class="pe-4 text-end" data-label="Acciones">
                                     <a href="{{ route('usuarios.ver', $usuario->id) }}" class="btn btn-sm btn-outline-primary btn-float" title="Ver detalle">
                                         <i class="fas fa-eye"></i>
                                     </a>
@@ -109,7 +117,7 @@
     </div>
 
     @if($usuarios->hasPages())
-    <div class="d-flex justify-content-between align-items-center mt-4">
+    <div class="sgi-pagination-bar d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 mt-4">
         <div class="text-muted">
             Mostrando {{ $usuarios->firstItem() }} a {{ $usuarios->lastItem() }} de {{ $usuarios->total() }} registros
         </div>

@@ -6,10 +6,10 @@
 <div class="container main-content">
     <!-- Welcome Section Premium -->
     <div class="welcome-section animate__animated animate__fadeInUp">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+        <div class="sgi-page-header d-flex flex-column flex-sm-row justify-content-between align-items-stretch align-items-sm-center gap-3">
             <div>
-                <h1 class="welcome-title">Bienvenido, <span style="color: var(--primary);">{{ nombreCompletoUsuario() }}</span>!</h1>
-                <p class="welcome-subtitle">Panel principal del gestor de inventario NODO.</p>
+                <h1 class="welcome-title">Bienvenid@, <span style="color: var(--primary);">{{ nombreCompletoUsuario() }}</span>!</h1>
+                <p class="welcome-subtitle mb-0">Panel principal del gestor de inventario NODO.</p>
             </div>
             <a href="https://sgi.naoproyectos.com/guias/GUIA%20DEL%20PRIMER%20USO%20DEL%20SISTEMA%20DE%20GESTI%C3%93N%20DE%20INVENTARIOS%20(SIG).pdf" 
                class="btn btn-primary" 
@@ -20,69 +20,7 @@
         </div>
     </div>
 
-    <!-- Bento Grid Estadísticas -->
-    <div class="bento-grid">
-        <!-- Registros -->
-        <div class="bento-card primary animate__animated animate__fadeInUp" style="animation-delay: 0.1s;">
-            <div class="bento-card-icon"><i class="fas fa-clipboard-check"></i></div>
-            <div>
-                <div class="stat-label">Registros</div>
-                <div class="stat-value" id="stat-registros">{{ $registros7Dias }}</div>
-                <div style="font-size: 0.8rem; color: var(--text-tertiary); margin-top: 8px;">Últimos 7 días</div>
-            </div>
-        </div>
 
-        <!-- Movimientos -->
-        <div class="bento-card warning animate__animated animate__fadeInUp" style="animation-delay: 0.2s;">
-            <div class="bento-card-icon"><i class="fas fa-exchange-alt"></i></div>
-            <div>
-                <div class="stat-label">Movimientos</div>
-                <div class="stat-value" id="stat-movimientos">{{ $movimientos7Dias }}</div>
-                <div style="font-size: 0.8rem; color: var(--text-tertiary); margin-top: 8px;">Últimos 7 días</div>
-            </div>
-        </div>
-
-        @if(esSuperAdmin() || tienePermiso('leerUsuarios'))
-        <!-- Usuarios (Solo Super Admin) -->
-        <a href="{{ route('usuarios.index') }}" class="bento-card success animate__animated animate__fadeInUp text-decoration-none" style="animation-delay: 0.3s; color: inherit;">
-            <div class="bento-card-icon"><i class="fas fa-users"></i></div>
-            <div>
-                <div class="stat-label">Usuarios Activos</div>
-                <div class="stat-value" id="stat-usuarios">{{ $usuariosActivos }}</div>
-                <div style="font-size: 0.8rem; color: var(--text-tertiary); margin-top: 8px;">En el sistema</div>
-            </div>
-        </a>
-        @else
-        <!-- Artículos a mi cargo Stat -->
-        <a href="#seccionCosasACargo" class="bento-card success animate__animated animate__fadeInUp text-decoration-none" style="animation-delay: 0.3s; color: inherit;">
-            <div class="bento-card-icon"><i class="fas fa-user-shield"></i></div>
-            <div>
-                <div class="stat-label">Bajo Mi Resguardo</div>
-                <div class="stat-value">{{ $totalCosasACargo ?? 0 }}</div>
-                <div style="font-size: 0.8rem; color: var(--text-tertiary); margin-top: 8px;">Artículos y vehículos</div>
-            </div>
-        </a>
-        @endif
-        
-        <!-- Tarjeta Grande Informativa CTA -->
-        <div class="bento-card info bento-large animate__animated animate__fadeInUp" style="animation-delay: 0.4s;">
-            <div style="display: flex; justify-content: space-between; align-items: center; height: 100%;">
-                <div>
-                    <h3 style="margin-bottom: 12px; font-weight: 700; color: var(--text-main);">Gestión Inteligente</h3>
-                    <p style="color: var(--text-muted); font-size: 0.95rem; max-width: 450px; margin-bottom: 24px; line-height: 1.6;">
-                        Administra el inventario corporativo, controla los activos fijos, consumibles, vehículos y da seguimiento a todas las operaciones del grupo en tiempo real.
-                    </p>
-                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                        <a href="{{ route('productos') }}" class="btn btn-primary"><i class="fas fa-boxes"></i> Ver Inventario</a>
-                        <a href="{{ route('usuarios.perfil') }}" class="btn btn-secondary"><i class="fas fa-user-cog"></i> Mi Perfil</a>
-                    </div>
-                </div>
-                <div class="d-none d-md-block" style="padding-right: 20px;">
-                    <i class="fas fa-cubes" style="font-size: 8rem; color: var(--info-bg); transform: rotate(-10deg);"></i>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- 1. Cards para Registrar Artículos en el Inventario -->
     <div class="mb-4 animate__animated animate__fadeInUp" style="animation-delay: 0.15s;">
@@ -234,7 +172,7 @@
                         </div>
                     </div>
 
-                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <div class="sgi-header-actions d-flex align-items-center gap-2 flex-wrap">
                         <button type="button" class="btn btn-sm btn-outline-warning rounded-pill px-3 shadow-xs text-dark" onclick="activarPushNotificaciones()">
                             <i class="fas fa-bell me-1 text-warning"></i> Alertas Push
                         </button>
@@ -388,7 +326,7 @@
                         </div>
                     </div>
 
-                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <div class="sgi-header-actions d-flex align-items-center gap-2 flex-wrap">
                         <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-xs" onclick="activarPushNotificaciones()">
                             <i class="fas fa-bell me-1"></i> Activar Notificaciones Push
                         </button>
@@ -502,6 +440,12 @@
                     </div>
                 </div>
 
+                <div>
+                    <button type="button" class="btn btn-primary shadow-sm rounded-pill px-3 py-2 d-inline-flex align-items-center gap-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#modalAgregarProductoACargo">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Agregar producto a mi cargo</span>
+                    </button>
+                </div>
             </div>
 
             <div class="card-body p-4">
@@ -571,6 +515,13 @@
                                                     <i class="fas fa-map-marker-alt text-danger me-1"></i>
                                                     <strong class="text-main">Ubicación:</strong> {{ $veh->ubicacion?->nombre ?? 'Sin ubicación' }}
                                                 </div>
+                                                @if(!empty($veh->proyecto))
+                                                <div class="col-12">
+                                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-2 py-0.5" style="font-size: 0.72rem;" title="{{ $veh->proyecto }}">
+                                                        <i class="fas fa-project-diagram me-1"></i>{{ \Illuminate\Support\Str::limit($veh->proyecto, 35) }}
+                                                    </span>
+                                                </div>
+                                                @endif
                                             </div>
 
                                             <!-- Estado del Mantenimiento -->
@@ -612,11 +563,17 @@
                                                 <i class="fas fa-wrench"></i>
                                             </a>
                                             <a href="{{ route('vehiculos.ver', $veh->id) }}" 
-                                               class="btn btn-outline-info btn-sm rounded-pill px-3 py-1"
+                                               class="btn btn-outline-info btn-sm rounded-pill px-2 py-1"
                                                style="font-size: 0.75rem;" 
                                                title="Ver detalles del vehículo">
                                                 <i class="fas fa-eye"></i>
                                             </a>
+                                            <button type="button" 
+                                                    class="btn btn-outline-danger btn-sm rounded-pill px-2 py-1"
+                                                    title="Quitar de mi cargo"
+                                                    onclick="abrirModalQuitarCargo('vehiculo', {{ $veh->id }}, '{{ addslashes($veh->marca . ' ' . $veh->modelo . ' (' . $veh->placas . ')') }}')">
+                                                <i class="fas fa-user-minus"></i>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -678,6 +635,14 @@
                                                     <small class="text-muted" style="font-size: 0.75rem;">
                                                         {{ $fijo->fechaEntrada ? 'Asignado: ' . \Carbon\Carbon::parse($fijo->fechaEntrada)->format('d/m/Y') : '' }}
                                                     </small>
+
+                                                    @if(!empty($fijo->proyecto))
+                                                        <div class="mt-1">
+                                                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-2 py-0.5" style="font-size: 0.72rem;" title="{{ $fijo->proyecto }}">
+                                                                <i class="fas fa-project-diagram me-1"></i>{{ \Illuminate\Support\Str::limit($fijo->proyecto, 35) }}
+                                                            </span>
+                                                        </div>
+                                                    @endif
                                                 </div>
                                             </div>
 
@@ -761,11 +726,17 @@
                                                 <iconify-icon icon="lucide:wrench" width="14" height="14"></iconify-icon>
                                             </a>
                                             <a href="{{ route('productos_fijos.viewFijos', $fijo->id) }}" 
-                                               class="btn btn-outline-info btn-sm rounded-pill px-3 py-1 d-inline-flex align-items-center justify-content-center"
+                                               class="btn btn-outline-info btn-sm rounded-pill px-2 py-1 d-inline-flex align-items-center justify-content-center"
                                                style="font-size: 0.75rem;" 
                                                title="Ver detalles y mantenimientos">
                                                 <iconify-icon icon="lucide:eye" width="15" height="15" class="text-primary"></iconify-icon>
                                             </a>
+                                            <button type="button" 
+                                                    class="btn btn-outline-danger btn-sm rounded-pill px-2 py-1 d-inline-flex align-items-center justify-content-center"
+                                                    title="Quitar de mi cargo"
+                                                    onclick="abrirModalQuitarCargo('fijo', {{ $fijo->id }}, '{{ addslashes($fijo->producto?->nombre ?? 'Activo Fijo') }}')">
+                                                <i class="fas fa-user-minus"></i>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -787,9 +758,16 @@
                         <i class="fas fa-shield-alt text-muted fa-2x"></i>
                     </div>
                     <h6 class="fw-bold text-dark mb-1">Sin artículos a tu cargo actualmente</h6>
-                    <p class="text-muted small mb-0" style="max-width: 480px; margin: 0 auto;">
-                        Actualmente no tienes vehículos ni activos fijos registrados bajo tu custodia. Cuando el área de almacén o administración te asigne herramientas o unidades, aparecerán listados aquí para tu consulta y control.
+                    <p class="text-muted small mb-3" style="max-width: 480px; margin: 0 auto;">
+                        Actualmente no tienes vehículos ni activos fijos registrados bajo tu custodia. Puedes poner artículos existentes bajo tu resguardo o registrar un nuevo activo fijo a tu nombre.
                     </p>
+                    <button type="button" 
+                            class="btn btn-primary rounded-pill px-4 py-2 d-inline-flex align-items-center gap-2 shadow-sm"
+                            data-bs-toggle="modal" 
+                            data-bs-target="#modalAgregarProductoACargo">
+                        <i class="fas fa-plus-circle"></i>
+                        <span class="fw-medium">Agregar producto a mi cargo</span>
+                    </button>
                 </div>
                 @endif
             </div>
@@ -797,6 +775,10 @@
     </div>
 
 </div>
+
+@push('modals')
+@include('components.home.modal_agregar_cargo')
+@endpush
 
 @if(esSuperAdmin() || tienePermiso('leerUsuarios'))
 <!--AJAX para obtener datos del dashboard (Super Admin y Administrador)  -->

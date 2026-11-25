@@ -107,10 +107,12 @@ class CompraVentaImport implements
                     throw new \Exception("La empresa '{$row['empresa_a_vender']}' no existe");
                 }
 
+                $empresaId = $ubicacion?->empresa_id ?? $empresa->id;
+
                 // Llamar procedimiento almacenado insertar_producto_compraventa
                 DB::statement("
                     CALL insertar_producto_compraventa(
-                        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
                     )
                 ", [
                     $row['nombre_del_producto'],
@@ -123,7 +125,8 @@ class CompraVentaImport implements
                     $this->parseFecha($row['fecha_de_entrada']),
                     null,
                     'Registro mediante importación masiva',
-                    Session::get('usuario')->id
+                    Session::get('usuario')->id,
+                    $empresaId
                 ]);
             }
 

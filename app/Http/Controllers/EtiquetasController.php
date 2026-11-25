@@ -40,6 +40,10 @@ class EtiquetasController extends Controller
 
         $request->validate([
             'nombre' => 'required|string|max:100|unique:etiquetas,nombre',
+        ], [
+            'nombre.required' => 'El nombre de la categoría es obligatorio.',
+            'nombre.unique' => 'Ya existe una categoría registrada con este nombre.',
+            'nombre.max' => 'El nombre de la categoría no puede superar los 100 caracteres.',
         ]);
 
         try {
@@ -51,22 +55,23 @@ class EtiquetasController extends Controller
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'status' => 'success',
-                    'message' => 'Etiqueta creada exitosamente.',
+                    'message' => 'Categoría creada exitosamente.',
                     'etiqueta' => $etiqueta,
                 ]);
             }
 
-            return redirect()->back()->with('success', 'Etiqueta creada exitosamente.');
+            return redirect()->back()->with('success', 'Categoría creada exitosamente.');
         } catch (\Exception $e) {
-            Log::error('Error al insertar etiqueta: ' . $e->getMessage());
+            Log::error('Error al insertar categoría: ' . $e->getMessage());
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Error al crear la etiqueta: ' . $e->getMessage()
+                    'message' => 'Ocurrió un error al crear la categoría.'
                 ], 500);
             }
-            return redirect()->back()->with('error', 'Error al crear la etiqueta.');
+            return redirect()->back()->with('error', 'Error al crear la categoría.');
         }
+
     }
 
     public function actualizar(Request $request, $id = null)
@@ -103,7 +108,7 @@ class EtiquetasController extends Controller
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Error al actualizar la etiqueta: ' . $e->getMessage()
+                    'message' => 'Ocurrió un error al actualizar la etiqueta.'
                 ], 500);
             }
             return redirect()->back()->with('error', 'Error al actualizar la etiqueta.');
@@ -147,7 +152,7 @@ class EtiquetasController extends Controller
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Error al eliminar la etiqueta: ' . $e->getMessage()
+                    'message' => 'Ocurrió un error al eliminar la etiqueta.'
                 ], 500);
             }
             return redirect()->back()->with('error', 'Error al eliminar la etiqueta.');

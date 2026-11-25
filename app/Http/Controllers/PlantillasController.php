@@ -30,4 +30,16 @@ class PlantillasController extends Controller
         $export = new PlantillasExport('compraventa');
         return $export->download('plantilla_compraventa.xlsx');
     }
+
+    public function descargarFijosConCodigos()
+    {
+        $export = new PlantillasExport('fijos', true, 200);
+        return $export->download('plantilla_activosfijos_con_codigos.xlsx');
+    }
+
+    public function descargarConsumiblesConCodigos()
+    {
+        $export = new PlantillasExport('consumibles', true, 200);
+        return $export->download('plantilla_consumibles_con_codigos.xlsx');
+    }
 }

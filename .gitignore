@@ -32,3 +32,10 @@ rr
 .rr.yaml
 
 ~$*
+
+# Respaldos SQL, scripts temporales y archivos de diagnóstico
+/storage/*.sql
+/storage/framework/lsp-*.php
+/scratch/
+/public/empresa/
+/public/productos/

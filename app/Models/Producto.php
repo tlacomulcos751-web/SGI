@@ -23,6 +23,14 @@ class Producto extends Model
         return $this->belongsTo(Empresa::class, 'empresa_id');
     }
 
+    public function getEmpresaAttribute($value)
+    {
+        if ($value) {
+            return $this->relations['empresa'] ?? $value;
+        }
+        return $this->ubicacion?->empresa;
+    }
+
     public function movimientos()
     {
         return $this->hasMany(Movimiento::class, 'id_producto');

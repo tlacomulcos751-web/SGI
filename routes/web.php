@@ -30,6 +30,12 @@ Route::post('/logout', function () {
      return redirect()->route('login');
 })->name('logout');
 
+// Gestión de Artículos a Cargo
+Route::post('/articulos-a-cargo/asignar-existente', [WebController::class, 'asignarProductoACargo'])->name('articulos.cargo.asignar');
+Route::post('/articulos-a-cargo/registrar-nuevo', [WebController::class, 'registrarNuevoProductoACargo'])->name('articulos.cargo.registrar');
+Route::post('/articulos-a-cargo/quitar', [WebController::class, 'quitarProductoACargo'])->name('articulos.cargo.quitar');
+Route::get('/api/proyectos-nodo', [WebController::class, 'obtenerProyectosNodo'])->name('api.proyectos.nodo');
+
 // Empresas
 Route::controller(EmpresaController::class)->group(function () {
     Route::prefix('empresa')->group(function () {
@@ -190,8 +196,10 @@ Route::post('/importar-fijos', [ImportExcelController::class, 'importarFijos'])-
 Route::post('/importar-consumibles', [ImportExcelController::class, 'importarConsumibles'])->name('importar.consumibles');
 Route::post('/importar-vehiculos', [ImportExcelController::class, 'importarVehiculos'])->name('importar.vehiculos');
 Route::get('/plantillas/fijos', [PlantillasController::class, 'descargarFijos'])->name('plantilla.fijos');
+Route::get('/plantillas/fijos-codigos', [PlantillasController::class, 'descargarFijosConCodigos'])->name('plantilla.fijos.codigos');
 Route::get('/plantillas/vehiculos', [PlantillasController::class, 'descargarVehiculos'])->name('plantilla.vehiculos');
 Route::get('/plantillas/consumibles', [PlantillasController::class, 'descargarConsumibles'])->name('plantilla.consumibles');
+Route::get('/plantillas/consumibles-codigos', [PlantillasController::class, 'descargarConsumiblesConCodigos'])->name('plantilla.consumibles.codigos');
 Route::get('/plantillas/compraventa', [PlantillasController::class, 'descargarCompraVenta'])->name('plantilla.compraventa');
 
 // RUTA TEMPORAL PARA HASHEAR CONTRASEÑAS EN PLANO

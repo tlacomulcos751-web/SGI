@@ -23,6 +23,7 @@ class Vehiculo extends Model
         'transmision',
         'ubicacion_id',
         'responsable',
+        'proyecto',
         'eliminado',
     ];
 

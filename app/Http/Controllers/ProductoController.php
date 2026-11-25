@@ -122,7 +122,7 @@ public function index(Request $request)
         $productos->appends($request->all());
     } catch (\Exception $e) {
         \Log::error('Error en paginación de productos: ' . $e->getMessage());
-        return back()->with('error', 'Error al cargar productos: ' . $e->getMessage());
+        return back()->with('error', 'Ocurrió un error al cargar los productos.');
     }
 
     // Etiquetas
@@ -254,13 +254,13 @@ public function indexFijos(Request $request)
     $query = DB::table('productos')
         ->join('productos_fijos', 'productos_fijos.producto_id', '=', 'productos.id')
         ->leftJoin('ubicacion', 'productos.ubicacion_id', '=', 'ubicacion.id')
-        ->leftJoin('empresa', 'productos.empresa_id', '=', 'empresa.id')
+        ->leftJoin('empresa', 'ubicacion.empresa_id', '=', 'empresa.id')
         ->select(
             'productos.id as id_fijo',
             'productos_fijos.id as id',
             'productos.nombre as nombre',
             'productos.precio as precio',
-            'productos.empresa_id as empresa_id',
+            'ubicacion.empresa_id as empresa_id',
             'empresa.nombre as empresa_nombre',
             'productos_fijos.clave as clave',
             DB::raw('COUNT(productos_fijos.producto_id) as existencia'),
@@ -275,7 +275,7 @@ public function indexFijos(Request $request)
             'productos_fijos.id',
             'productos.nombre',
             'productos.precio',
-            'productos.empresa_id',
+            'ubicacion.empresa_id',
             'empresa.nombre',
             'productos_fijos.clave',
             'productos_fijos.estado',
@@ -430,7 +430,8 @@ public function indexFijos(Request $request)
                 return back()->with('error', 'La API de códigos QR no respondió correctamente.');
             }
         } catch (\Exception $e) {
-            return back()->with('error', 'Error al generar el QR: ' . $e->getMessage());
+            Log::error('Error al generar el QR: ' . $e->getMessage());
+            return back()->with('error', 'Ocurrió un error al generar el código QR.');
         }
     }
 
@@ -455,6 +456,7 @@ public function indexFijos(Request $request)
                 'responsable' => 'required|exists:usuario,id',
                 'fotografias.*' => 'image|mimes:jpeg,png,jpg,gif|max:5120',
                 'fechaEntrada' => 'required|date|before_or_equal:today',
+                'proyecto' => 'nullable|string|max:255',
                 'documentacion' => 'nullable|string',
                 'comentario' => 'nullable|string',
             ]);
@@ -528,6 +530,21 @@ public function indexFijos(Request $request)
             // Obtener ID del nuevo producto ingresado
             $ultimoId = DB::table('productos')->orderBy('id', 'desc')->value('id');
 
+            $proyectoSeleccionado = $request->filled('proyecto') ? trim($request->proyecto) : null;
+            if ($ultimoId && $proyectoSeleccionado) {
+                DB::table('productos_fijos')->where('producto_id', $ultimoId)->update([
+                    'proyecto' => $proyectoSeleccionado
+                ]);
+                $fijoIds = DB::table('productos_fijos')->where('producto_id', $ultimoId)->pluck('id');
+                if ($fijoIds->isNotEmpty()) {
+                    DB::table('movimiento')
+                        ->whereIn('id_producto', $fijoIds)
+                        ->where('categoria', 'fijos')
+                        ->where('accion', 'registro')
+                        ->update(['proyecto' => $proyectoSeleccionado]);
+                }
+            }
+
             // Insertar etiquetas si se enviaron
             $etiquetas = $request->input('etiquetasInsertar', []);
             if (!empty($etiquetas)) {
@@ -544,7 +561,7 @@ public function indexFijos(Request $request)
             throw $e;
         } catch (\Exception $e) {
             Log::error('Error al insertar producto fijo: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Ocurrió un error al insertar el producto fijo: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Ocurrió un error al insertar el producto fijo. Verifica los datos e intenta nuevamente.');
         }
     }
 
@@ -556,8 +573,8 @@ public function indexFijos(Request $request)
 
         try {
             // Cargar el producto fijo con todas las relaciones necesarias de forma eficiente
-            $productoFijo = ProductoFijo::with(['producto.ubicacion', 'producto.empresa', 'usuarioResponsable.rol', 'mantenimientos', 'comentarios.usuario'])->findOrFail($id);
-            $producto = Producto::with('empresa')->findOrFail($productoFijo->producto_id);
+            $productoFijo = ProductoFijo::with(['producto.ubicacion.empresa', 'usuarioResponsable.rol', 'mantenimientos', 'comentarios.usuario'])->findOrFail($id);
+            $producto = Producto::findOrFail($productoFijo->producto_id);
             $etiquetas = EtiquetaProducto::where('producto_id', $productoFijo->producto_id)->get();
             $usuarios = Usuario::where('estado', 'activo')->orderBy('nombre')->get();
             $movimientos = Movimiento::where('id_producto', $productoFijo->id)
@@ -565,11 +582,12 @@ public function indexFijos(Request $request)
                 ->with('usuario')
                 ->orderByDesc('fecha')
                 ->get();
-            $ubicaciones = VistaPermisosRolEmpresaUbicacion::with('ubicacion')
+            $ubicaciones = VistaPermisosRolEmpresaUbicacion::with('ubicacion.empresa')
                 ->where('rol_id', Session::get('usuario')->id_rol)
-                ->where('puede_leer_ubicacion', true)
                 ->get();
             $todasLasEtiquetas = Etiqueta::where('eliminado', 1)->orderBy('nombre')->get();
+            $empresasInternas = Empresa::where('status', 'interna')->orderBy('nombre')->get();
+            $cantidadTotal = ProductoFijo::where('producto_id', $producto->id)->where('estado', '!=', 'baja')->count() ?: 1;
             $comentarios = $productoFijo->comentarios;
             return view('productos.fijos.viewFijos', compact(
                 'productoFijo',
@@ -579,7 +597,9 @@ public function indexFijos(Request $request)
                 'comentarios',
                 'ubicaciones',
                 'usuarios',
-                'todasLasEtiquetas'
+                'todasLasEtiquetas',
+                'empresasInternas',
+                'cantidadTotal'
             ));
         } catch (\Exception $e) {
             Log::error('Error al obtener producto fijo: ' . $e->getMessage());
@@ -698,49 +718,203 @@ public function indexFijos(Request $request)
                 'estado' => 'required|in:activo,baja,reparacion',
                 'calidad' => 'required|in:bueno,regular,malo',
                 'comentario' => 'nullable|string',
-                'documento_baja' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+                'documento_baja' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+                'empresa_id' => 'nullable|exists:empresa,id',
+                'ubicacion_id' => 'nullable|exists:ubicacion,id',
+                'responsable' => 'nullable|exists:usuario,id',
+                'fechaEntrada' => 'nullable|date',
+                'cantidad' => 'nullable|integer|min:1|max:10000',
+                'etiquetas' => 'nullable|array',
+                'fotografias.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             ]);
 
             $productoFijo = ProductoFijo::findOrFail($id);
             $producto = $productoFijo->producto;
+            $cambios = [];
 
-            $producto->update([
-                'nombre' => $request->nombre,
-                'codigoBarra' => $request->codigoBarra,
-                'descripcion' => $request->descripcion,
-                'precio' => $request->filled('precio') ? $request->precio : null,
-            ]);
-
-            $productoFijo->estado = $request->estado;
-            $productoFijo->calidad = $request->calidad;
-
-            if ($request->estado === 'baja' && $request->hasFile('documento_baja')) {
-                $archivo = $request->file('documento_baja');
-                $nombreArchivo = time() . '_' . $archivo->getClientOriginalName();
-            
-                // Mover directamente a public/productos/fijos/doc
-                $archivo->move(public_path('productos/fijos/doc'), $nombreArchivo);
-            
-                // Generar URL pública
-                $documento = asset('productos/fijos/doc/' . $nombreArchivo);
+            // 1. Datos básicos del producto
+            if ($producto->nombre !== $request->nombre) {
+                $cambios[] = "Nombre: '{$request->nombre}'";
+                $producto->nombre = $request->nombre;
+            }
+            if ($producto->codigoBarra !== $request->codigoBarra) {
+                $cambios[] = "Código de barras actualizado";
+                $producto->codigoBarra = $request->codigoBarra;
+            }
+            $producto->descripcion = $request->descripcion;
+            $nuevoPrecio = $request->filled('precio') ? (float)$request->precio : null;
+            if ($producto->precio != $nuevoPrecio) {
+                $cambios[] = "Precio: " . ($nuevoPrecio !== null ? '$' . number_format($nuevoPrecio, 2) : 'N.A.');
+                $producto->precio = $nuevoPrecio;
             }
 
+            // 2. Ubicación
+            if ($request->filled('ubicacion_id') && $request->ubicacion_id != $producto->ubicacion_id) {
+                $cantidadAsociados = ProductoFijo::where('producto_id', $producto->id)->count();
+                if ($cantidadAsociados > 1) {
+                    $nuevoProducto = $producto->replicate();
+                    $nuevoProducto->ubicacion_id = $request->ubicacion_id;
+                    $nuevoProducto->save();
+
+                    // Copiar etiquetas al producto clonado
+                    $etiquetasActuales = EtiquetaProducto::where('producto_id', $producto->id)->get();
+                    foreach ($etiquetasActuales as $et) {
+                        EtiquetaProducto::create([
+                            'producto_id' => $nuevoProducto->id,
+                            'clasificacion_id' => $et->clasificacion_id
+                        ]);
+                    }
+
+                    $productoFijo->producto_id = $nuevoProducto->id;
+                    $productoFijo->save();
+                    $producto = $nuevoProducto;
+                } else {
+                    $producto->ubicacion_id = $request->ubicacion_id;
+                }
+                $cambios[] = "Ubicación actualizada";
+            }
+
+            // 3. Responsable
+            if ($request->filled('responsable') && $request->responsable != $productoFijo->responsable) {
+                $productoFijo->responsable = $request->responsable;
+                $cambios[] = "Responsable actualizado";
+            }
+
+            // 4. Fecha de Entrada
+            if ($request->filled('fechaEntrada') && $request->fechaEntrada != $productoFijo->fechaEntrada) {
+                $productoFijo->fechaEntrada = $request->fechaEntrada;
+                $cambios[] = "Fecha de entrada actualizada a " . date('d/m/Y', strtotime($request->fechaEntrada));
+            }
+
+            // 5. Calidad (Estado de conservación)
+            if ($productoFijo->calidad !== $request->calidad) {
+                $productoFijo->calidad = $request->calidad;
+                $cambios[] = "Estado de conservación actualizado a {$request->calidad}";
+            }
+
+            // 6. Estado
+            if ($productoFijo->estado !== $request->estado) {
+                $productoFijo->estado = $request->estado;
+                $cambios[] = "Estado cambiado a {$request->estado}";
+            }
+
+            // Manejo de baja
+            $documento = null;
+            if ($request->estado === 'baja') {
+                $productoFijo->fechaSalida = now();
+                if ($request->hasFile('documento_baja')) {
+                    $archivo = $request->file('documento_baja');
+                    $nombreArchivo = time() . '_' . $archivo->getClientOriginalName();
+                    $archivo->move(public_path('productos/fijos/doc'), $nombreArchivo);
+                    $documento = asset('productos/fijos/doc/' . $nombreArchivo);
+                }
+            } else {
+                $productoFijo->fechaSalida = null;
+            }
+
+            // 7. Fotografías (nuevas fotos desde archivo o cámara)
+            $urlsNuevas = [];
+            if ($request->has('capturaCamara') && $request->capturaCamara) {
+                $base64 = $request->capturaCamara;
+                if (preg_match('/^data:image\/(\w+);base64,/', $base64, $type)) {
+                    $data = substr($base64, strpos($base64, ',') + 1);
+                    $data = base64_decode($data);
+                    if ($data !== false) {
+                        $extension = strtolower($type[1]);
+                        $nombreArchivo = uniqid() . '.' . $extension;
+                        $ruta = public_path("productos/fijos/{$nombreArchivo}");
+                        file_put_contents($ruta, $data);
+                        $urlsNuevas[] = asset("productos/fijos/" . $nombreArchivo);
+                    }
+                }
+            }
+            if ($request->hasFile('fotografias')) {
+                foreach ($request->file('fotografias') as $foto) {
+                    $nombreArchivo = time() . '_' . $foto->getClientOriginalName();
+                    $foto->move(public_path('productos/fijos'), $nombreArchivo);
+                    $urlsNuevas[] = asset('productos/fijos/' . $nombreArchivo);
+                }
+            }
+            if (!empty($urlsNuevas)) {
+                $fotosExistentes = array_filter(explode(',', $productoFijo->fotografias ?? ''));
+                $productoFijo->fotografias = implode(',', array_merge($fotosExistentes, $urlsNuevas));
+                $cambios[] = "Se agregaron " . count($urlsNuevas) . " foto(s)";
+            }
+
+            // 8. Cantidad (Existencia)
+            if ($request->filled('cantidad')) {
+                $nuevaCantidad = (int)$request->cantidad;
+                $conteoActual = ProductoFijo::where('producto_id', $producto->id)->where('estado', '!=', 'baja')->count();
+                if ($nuevaCantidad > $conteoActual) {
+                    $faltantes = $nuevaCantidad - $conteoActual;
+                    for ($i = 0; $i < $faltantes; $i++) {
+                        $nuevaClave = $producto->id . '-' . date('Ymd', strtotime($productoFijo->fechaEntrada ?? now())) . '-' . str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);
+                        ProductoFijo::create([
+                            'producto_id' => $producto->id,
+                            'clave' => $nuevaClave,
+                            'estado' => $productoFijo->estado,
+                            'calidad' => $productoFijo->calidad,
+                            'responsable' => $productoFijo->responsable,
+                            'fotografias' => $productoFijo->fotografias,
+                            'fechaEntrada' => $productoFijo->fechaEntrada,
+                        ]);
+                    }
+                    $cambios[] = "Cantidad incrementada en {$faltantes} unidad(es)";
+                } elseif ($nuevaCantidad < $conteoActual) {
+                    $exceso = $conteoActual - $nuevaCantidad;
+                    $sobrantes = ProductoFijo::where('producto_id', $producto->id)
+                        ->where('id', '!=', $productoFijo->id)
+                        ->where('estado', '!=', 'baja')
+                        ->limit($exceso)
+                        ->get();
+                    foreach ($sobrantes as $sobrante) {
+                        $sobrante->estado = 'baja';
+                        $sobrante->fechaSalida = now();
+                        $sobrante->save();
+                    }
+                    $cambios[] = "Cantidad reducida en {$exceso} unidad(es)";
+                }
+            }
+
+            // 9. Categorías / Etiquetas
+            if ($request->has('etiquetas')) {
+                $nuevasEtiquetas = array_filter($request->input('etiquetas', []));
+                EtiquetaProducto::where('producto_id', $producto->id)->delete();
+                if (!empty($nuevasEtiquetas)) {
+                    $insertData = array_map(fn($tagId) => [
+                        'producto_id' => $producto->id,
+                        'clasificacion_id' => $tagId,
+                    ], $nuevasEtiquetas);
+                    EtiquetaProducto::insert($insertData);
+                }
+                $cambios[] = "Categorías actualizadas";
+            }
+
+            // Guardar cambios en modelos
+            $producto->save();
             $productoFijo->save();
 
+            // Registrar movimiento en el historial
             $accionLog = $request->estado === 'baja' ? 'Baja de producto' : 'Actualización de información';
+            $comentarioFinal = $request->filled('comentario')
+                ? $request->comentario
+                : (count($cambios) ? implode('; ', $cambios) : 'Actualización de información');
 
             Movimiento::create([
                 'id_user' => session('usuario')->id,
                 'id_producto' => $productoFijo->id,
                 'categoria' => 'fijos',
                 'accion' => $accionLog,
-                'comentario' => $request->comentario,
-                'documentacion' => $documento ?? null
+                'comentario' => $comentarioFinal,
+                'documentacion' => $documento
             ]);
 
             return back()->with('success', 'Información actualizada correctamente.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
-            return back()->with('error', 'Ocurrió un error: ' . $e->getMessage());
+            Log::error('Error al actualizar info de producto fijo: ' . $e->getMessage());
+            return back()->with('error', 'Ocurrió un error al actualizar la información.');
         }
     }
 
@@ -792,7 +966,8 @@ public function indexFijos(Request $request)
 
             return back()->with('success', 'Ubicación actualizada correctamente.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Ocurrió un error: ' . $e->getMessage());
+            Log::error('Error al actualizar ubicación de producto fijo: ' . $e->getMessage());
+            return back()->with('error', 'Ocurrió un error al actualizar la ubicación.');
         }
     }
 
@@ -822,7 +997,8 @@ public function indexFijos(Request $request)
 
             return back()->with('success', 'Responsable actualizado correctamente.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Ocurrió un error: ' . $e->getMessage());
+            Log::error('Error al actualizar responsable de producto fijo: ' . $e->getMessage());
+            return back()->with('error', 'Ocurrió un error al actualizar el responsable.');
         }
     }
 
@@ -935,7 +1111,7 @@ public function indexFijos(Request $request)
             return response()->download($tempPath)->deleteFileAfterSend(true);
         } catch (\Exception $e) {
             Log::error('Error al generar el vale de salida para el producto fijo ID ' . $id . ': ' . $e->getMessage());
-            return back()->with('error', 'Ocurrió un error al generar el documento. ' . $e->getMessage());
+            return back()->with('error', 'Ocurrió un error al generar el documento.');
         }
     }
 
@@ -1046,7 +1222,7 @@ public function indexFijos(Request $request)
             return response()->download($tempPath)->deleteFileAfterSend(true);
         } catch (\Exception $e) {
             Log::error('Error al generar la orden de mantenimiento para el producto fijo ID ' . $id . ': ' . $e->getMessage());
-            return back()->with('error', 'Ocurrió un error al generar la orden de mantenimiento. ' . $e->getMessage());
+            return back()->with('error', 'Ocurrió un error al generar la orden de mantenimiento.');
         }
     }
 
@@ -1096,7 +1272,7 @@ public function indexFijos(Request $request)
             return redirect()->back()->with('success', 'Mantenimiento preventivo registrado con éxito. Próximo servicio: ' . $proximaFecha->format('d/m/Y'));
         } catch (\Exception $e) {
             Log::error('Error al registrar mantenimiento de activo fijo: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Error al guardar el mantenimiento: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Ocurrió un error al guardar el mantenimiento. Intenta nuevamente.');
         }
     }
 

@@ -12,6 +12,8 @@
                 </div>
 
                 <div class="modal-body p-4">
+                    <div id="errorModalInsertarEtiqueta" class="alert alert-danger d-none py-2 px-3 small mb-3"></div>
+
                     <div class="row g-3">
                         {{-- NOMBRE --}}
                         <div class="col-12">
@@ -33,7 +35,7 @@
                         <i class="fas fa-times me-2"></i> Cancelar
                     </button>
                     <button type="submit" class="btn btn-primary" id="btnGuardarEtiqueta">
-                        <i class="fas fa-save me-2"></i> Guardar Etiqueta
+                        <i class="fas fa-save me-2"></i> Guardar Categoría
                     </button>
                 </div>
             </div>
@@ -43,18 +45,68 @@
 
 <script>
     function guardarEtiquetaAjax(event) {
-        return enviarFormularioAjax(event, function(data, form) {
+        event.preventDefault();
+        const form = event.target || document.getElementById('formInsertarEtiqueta');
+        const submitBtn = document.getElementById('btnGuardarEtiqueta');
+        const errBox = document.getElementById('errorModalInsertarEtiqueta');
+
+        if (errBox) {
+            errBox.classList.add('d-none');
+            errBox.textContent = '';
+        }
+
+        const inputNombre = document.getElementById('nombreEtiqueta');
+        if (!inputNombre || !inputNombre.value.trim()) {
+            if (errBox) {
+                errBox.textContent = 'Por favor ingrese el nombre de la categoría.';
+                errBox.classList.remove('d-none');
+            }
+            if (inputNombre) inputNombre.focus();
+            return false;
+        }
+
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Guardando...';
+        }
+
+        const formData = new FormData(form);
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': csrfToken || ''
+            }
+        })
+        .then(async response => {
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                let errorMsg = data.message || 'Error al guardar la categoría.';
+                if (data.errors && data.errors.nombre) {
+                    errorMsg = data.errors.nombre[0];
+                }
+                throw new Error(errorMsg);
+            }
+            return data;
+        })
+        .then(data => {
+            if (typeof mostrarNotificacion === 'function') {
+                mostrarNotificacion(data.message || 'Categoría creada exitosamente.', 'success');
+            }
             // Cerrar el modal
             const modalEl = document.getElementById('modalInsertarEtiqueta');
             if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
                 const modalObj = bootstrap.Modal.getInstance(modalEl);
                 if (modalObj) modalObj.hide();
             }
-            if (form) form.reset();
+            form.reset();
 
             // Si estamos en la pantalla principal de etiquetas, recargar para ver la nueva fila
             if (window.location.pathname.includes('/etiquetas')) {
-                setTimeout(() => window.location.reload(), 800);
+                setTimeout(() => window.location.reload(), 600);
                 return;
             }
 
@@ -83,7 +135,24 @@
                     selectClasificacion.add(opt);
                 }
             }
+        })
+        .catch(err => {
+            if (errBox) {
+                errBox.textContent = err.message;
+                errBox.classList.remove('d-none');
+            }
+            if (typeof mostrarNotificacion === 'function') {
+                mostrarNotificacion(err.message, 'error');
+            }
+        })
+        .finally(() => {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-save me-2"></i> Guardar Categoría';
+            }
         });
+
+        return false;
     }
 
     document.addEventListener('DOMContentLoaded', function() {

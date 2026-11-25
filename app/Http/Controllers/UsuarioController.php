@@ -53,7 +53,8 @@ class UsuarioController extends Controller
 
             return view('usuarios.index', compact('usuarios', 'roles'));
         } catch (\Exception $e) {
-            return appRedirectToHome('Error al cargar los usuarios: ' . $e->getMessage());
+            Log::error('Error al cargar los usuarios: ' . $e->getMessage());
+            return appRedirectToHome('Ocurrió un error al cargar los usuarios.');
         }
     }
 
@@ -67,16 +68,18 @@ class UsuarioController extends Controller
             'nombre' => 'required|string|max:100',
             'apellido' => 'required|string|max:100',
             'apellido_m' => 'nullable|string|max:100',
-            'gmail' => 'required|email|max:150',
+            'gmail' => 'nullable|email|max:150|unique:usuario,gmail',
             'id_rol' => 'required|integer|exists:rol,id',
         ]);
 
         try {
+            $gmail = $request->filled('gmail') ? trim($request->gmail) : null;
+
             $results = DB::select("CALL insertar_usuario(?, ?, ?, ?, ?, @nombre_user, @password_plain)", [
                 $request->nombre,
                 $request->apellido,
                 $request->apellido_m,
-                $request->gmail,
+                $gmail,
                 $request->id_rol
             ]);
 
@@ -84,7 +87,8 @@ class UsuarioController extends Controller
 
             return redirect()->back()->with('success', 'Usuario creado: ' . $output[0]->nombre_user . ', contraseña: ' . $output[0]->password_plain);
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Error al insertar usuario: ' . $e->getMessage());
+            Log::error('Error al insertar usuario: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Ocurrió un error al crear el usuario. Verifica los datos e intenta nuevamente.');
         }
     }
 
@@ -122,8 +126,12 @@ class UsuarioController extends Controller
         }
 
         $request->validate([
-            'estado' => 'required|String|in:activo,inactivo',
-            'gmail' => 'required|email|max:150',
+            'nombre' => 'required|string|max:100',
+            'apellido' => 'required|string|max:100',
+            'apellido_m' => 'nullable|string|max:100',
+            'nombre_user' => 'required|string|max:100|unique:usuario,nombre_user,' . $id,
+            'estado' => 'required|string|in:activo,inactivo',
+            'gmail' => 'nullable|email|max:150|unique:usuario,gmail,' . $id,
             'password' => 'nullable|string|min:6|max:100',
             'rol' => 'required|integer|exists:rol,id',
         ]);
@@ -136,8 +144,12 @@ class UsuarioController extends Controller
                 return redirect()->back()->with('error', 'No tienes permisos para modificar a un Super Administrador.');
             }
 
+            $usuario->nombre = trim($request->nombre);
+            $usuario->apellido = trim($request->apellido);
+            $usuario->apellido_m = $request->filled('apellido_m') ? trim($request->apellido_m) : null;
+            $usuario->nombre_user = trim($request->nombre_user);
             $usuario->estado = $request->estado;
-            $usuario->gmail = $request->gmail;
+            $usuario->gmail = $request->filled('gmail') ? trim($request->gmail) : null;
             $usuario->id_rol = $request->rol;
 
             if ($request->filled('password')) {
@@ -148,8 +160,8 @@ class UsuarioController extends Controller
 
             return redirect()->back()->with('success', 'Usuario actualizado correctamente');
         } catch (\Exception $e) {
-            Log::error('Usuario no encontrado', $e);
-            return redirect()->route('usuarios.index')->with('error', 'Usuario no encontrado ');
+            Log::error('Error al actualizar el usuario: ' . $e->getMessage());
+            return redirect()->back()->withInput()->with('error', 'Ocurrió un error al actualizar el usuario. Intenta nuevamente.');
         }
     }
 
@@ -204,13 +216,14 @@ class UsuarioController extends Controller
         }
 
         try {
+            $usuarioId = Session::get('usuario')->id;
             $request->validate([
-                'gmail' => 'required|email|max:150',
+                'gmail' => 'nullable|email|max:150|unique:usuario,gmail,' . $usuarioId,
                 'password' => 'nullable|string|min:6|max:100',
             ]);
 
-            $usuario = Usuario::findOrFail(Session::get('usuario')->id);
-            $usuario->gmail = $request->gmail;
+            $usuario = Usuario::findOrFail($usuarioId);
+            $usuario->gmail = $request->filled('gmail') ? trim($request->gmail) : null;
 
             if ($request->filled('password')) {
                 $usuario->password = \Illuminate\Support\Facades\Hash::make($request->password);

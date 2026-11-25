@@ -23,17 +23,17 @@
             @if($productos->count() > 0)
             <div class="list-group list-group-flush">
                 @foreach($productos as $producto)
-                <div class="list-group-item border-0 py-3 px-4 hover-bg-light transition-all">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="icon-circle bg-primary bg-opacity-10 text-primary">
+                <div class="list-group-item border-0 py-3 px-3 px-md-4 hover-bg-light transition-all">
+                    <div class="d-flex flex-wrap align-items-center gap-2 gap-md-3">
+                        <div class="icon-circle bg-primary bg-opacity-10 text-primary flex-shrink-0">
                             <i class="fas fa-box"></i>
                         </div>
-                        <div class="flex-grow-1">
+                        <div class="flex-grow-1 min-w-0">
                             <a href="{{ $rutaDetalle($producto) }}"
                                 class="text-decoration-none text-dark hover-text-primary">
-                                <h6 class="mb-1 fw-semibold">{{ $producto->producto->nombre }}</h6>
+                                <h6 class="mb-1 fw-semibold text-truncate">{{ $producto->producto->nombre }}</h6>
                             </a>
-                            <div class="d-flex align-items-center gap-2">
+                            <div class="d-flex flex-wrap align-items-center gap-2">
                                 <span class="text-muted small">
                                     <i class="fas fa-map-marker-alt me-1"></i>
                                     {{ $producto->producto->ubicacion->nombre ?? 'Sin ubicación' }}

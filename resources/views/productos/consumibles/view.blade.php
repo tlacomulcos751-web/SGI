@@ -12,23 +12,23 @@
                 </h1>
                 <p class="opacity-75 mb-0">Detalles del producto de compra/venta</p>
             </div>
-            <div class="d-flex flex-wrap justify-content-end gap-2 w-100 w-md-auto">
+            <div class="sgi-header-actions d-flex flex-wrap justify-content-start justify-content-md-end gap-2 w-100 w-md-auto">
                 @if (tienePermiso('consumible - modificar'))
                 <!-- Botón Editar Información - Color verde -->
                 <button id="btnActualizarInfo" type="button" class="btn btn-success btn-sm rounded-pill px-3 flex-grow-1 flex-md-grow-0"
                     data-bs-toggle="modal" data-bs-target="#actualizarInfoModal">
-                    <i class="fas fa-info-circle me-1"></i> <span class="d-none d-md-inline">Editar información</span>
+                    <i class="fas fa-info-circle me-1"></i> <span>Editar información</span>
                 </button>
 
                 <!-- Botón Cambiar Ubicación - Color naranja -->
                 <button id="btnActualizarUbicacion" type="button" class="btn btn-warning btn-sm rounded-pill px-3 flex-grow-1 flex-md-grow-0 text-white"
                     data-bs-toggle="modal" data-bs-target="#actualizarUbicacionModal">
-                    <i class="fas fa-map-marker-alt me-1"></i> <span class="d-none d-md-inline">Cambiar ubicación</span>
+                    <i class="fas fa-map-marker-alt me-1"></i> <span>Cambiar ubicación</span>
                 </button>
 
                 <button id="btnActualizarExistencia" type="button" class="btn btn-success btn-sm rounded-pill px-3 flex-grow-1 flex-md-grow-0"
                     data-bs-toggle="modal" data-bs-target="#ajustarExistenciaModal">
-                    <i class="fas fa-info-circle me-1"></i> <span class="d-none d-md-inline">Modificar Existencia</span>
+                    <i class="fas fa-sliders-h me-1"></i> <span>Modificar Existencia</span>
                 </button>
                 @endif
             </div>
@@ -48,7 +48,7 @@
         <div class="card-body p-0">
             <div class="row g-0">
                 <!-- Left Column -->
-                <div class="col-lg-6 p-4 border-end">
+                <div class="col-lg-6 p-3 p-md-4 border-bottom border-lg-bottom-0 border-lg-end">
                     <div class="mb-4">
                         <h6 class="text-uppercase text-muted small fw-bold mb-3">Datos básicos</h6>
                         <div class="row g-3">

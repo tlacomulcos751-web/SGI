@@ -15,7 +15,7 @@
 
                 <div class="modal-body p-4 text-center">
                     <i class="fas fa-exclamation-triangle text-danger" style="font-size: 3rem; margin-bottom: 15px;"></i>
-                    <p class="fs-5 mb-0">¿Estás seguro de que deseas eliminar la etiqueta <strong id="nombreEtiqueta_eliminar" class="text-danger"></strong>?</p>
+                    <p class="fs-5 mb-0">¿Estás seguro de que deseas eliminar la categoría <strong id="nombreEtiqueta_eliminar" class="text-danger"></strong>?</p>
                 </div>
 
                 <div class="modal-footer bg-light">

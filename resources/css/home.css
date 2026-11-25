@@ -316,3 +316,25 @@ body {
     border-radius: 10px;
     border-width: 2px;
 }
+
+@media (max-width: 767.98px) {
+    body {
+        padding-top: 6px;
+    }
+    .print-form {
+        display: block;
+        width: 100%;
+    }
+    .print-button {
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 12px;
+    }
+    .nav-link-custom {
+        padding: 0.6rem 0.85rem;
+        margin: 0;
+    }
+    .nav-link-custom:hover {
+        transform: none;
+    }
+}

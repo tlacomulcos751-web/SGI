@@ -1,6 +1,10 @@
 document.addEventListener("DOMContentLoaded", function () {
     const modal = document.getElementById("insertarProductoFijoModal");
     if (modal) {
+        modal.addEventListener("shown.bs.modal", function () {
+            const body = modal.querySelector(".modal-body");
+            if (body) body.scrollTop = 0;
+        });
         modal.addEventListener("hidden.bs.modal", function () {
             document.body.classList.remove('modal-open');
             document.body.style.overflow = "";
