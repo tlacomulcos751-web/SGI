@@ -24,12 +24,12 @@
     "src": "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff2"
   },
   "resources/css/app.css": {
-    "file": "assets/app-DCaON0tb.css",
+    "file": "assets/app-raIJnyiB.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-Df-Dv_zG.js",
+    "file": "assets/app-CDQKQiPr.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true

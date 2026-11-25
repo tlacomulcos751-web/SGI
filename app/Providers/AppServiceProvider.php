@@ -35,9 +35,8 @@ class AppServiceProvider extends ServiceProvider
             // Se ignora en comandos de consola por si la BD no está lista
         }
 
-        // 3. Mantener HTTPS solo en producción sin forzar un solo dominio
-        if (config('app.env') === 'production') {
-            // URL::forceRootUrl(config('app.url')); // Se comenta para permitir múltiples dominios
+        // 3. Mantener HTTPS solo cuando se use HTTPS en el dominio o entorno
+        if ((str_starts_with((string)config('app.url'), 'https://') || env('FORCE_HTTPS', false)) && config('app.env') === 'production') {
             URL::forceScheme('https');
         }
 
