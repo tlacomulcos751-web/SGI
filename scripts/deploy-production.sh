@@ -79,7 +79,9 @@ commands = [
     
     # Limpiar caché obsoleta y regenerar optimizaciones de Laravel
     'echo \"nao2026\" | sudo -S rm -f $REMOTE_PATH/bootstrap/cache/*.php',
+    'cd $REMOTE_PATH && echo \"nao2026\" | sudo -u www-data -S composer dump-autoload --optimize --no-dev --no-interaction',
     'cd $REMOTE_PATH && echo \"nao2026\" | sudo -u www-data -S php artisan package:discover --ansi',
+    'cd $REMOTE_PATH && echo \"nao2026\" | sudo -u www-data -S php artisan migrate --force',
     'cd $REMOTE_PATH && echo \"nao2026\" | sudo -u www-data -S php artisan storage:link || true',
     'cd $REMOTE_PATH && echo \"nao2026\" | sudo -u www-data -S php artisan config:clear',
     'cd $REMOTE_PATH && echo \"nao2026\" | sudo -u www-data -S php artisan route:clear',
